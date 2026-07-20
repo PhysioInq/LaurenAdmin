@@ -4,24 +4,46 @@ A simple, private command centre — no logins, no setup, nothing technical.
 Open either file in any web browser and it just works.
 
 - **`index.html`** — your personal admin dashboard (below).
-- **`team-hub.html`** — the Marketing Team Hub (department plan, projects, tasks & board reporting).
+- **`team-hub.html`** — the Growth & Partnerships Department Hub (the live replacement for the quarterly operational tracker spreadsheet).
 
 The two are linked to each other by the buttons in their top bars.
 
 ---
 
-# Marketing Team Hub (`team-hub.html`)
+# G&P Department Hub (`team-hub.html`)
 
-A department planning & tracking hub for the marketing team — everything in one page, with six tabs:
+A live hub that replaces the *Pinq G&P — 2026 Operational Tracker* spreadsheet. It's built around your real
+model: the **five strategic pillars** (Services, Finance, People, Processes, Governance), the six-person team,
+and all 27 initiatives with their KPIs, leads, timelines, statuses and quarterly updates.
 
-- **📊 Overview** — live snapshot: active projects, on-track vs at-risk, tasks in flight, blocked/overdue items, and team size; plus a *workload by person* chart, a *task status mix* chart, project-health bars, the next 30 days of milestones & deadlines, and a *needs-attention* list.
-- **🗂️ Projects** — a visual **timeline** (each project drawn start → target, with a "today" line), and project cards with lead, status, priority, progress and checkable milestones.
-- **✓ Tasks** — the allocation board: who's doing what, filterable by person / project / status and sortable by due date, priority or person.
-- **👥 Team** — a directory card per person: role, email, focus areas, availability, and how many active tasks they're carrying.
-- **🎯 Dept Plan** — the department's objectives with measurable key results; type in the current number and the progress fills itself.
-- **📄 Board Report** — one click compiles a formatted, ready-to-present board report: an **auto-written executive summary**, objectives progress, a project-status table, achievements this period, upcoming milestones, team workload, and a risks/blockers list. Then **Print / Save as PDF**, **Copy as text**, or **Analyse & polish with Claude** (copies the report and opens a chat so Claude can tighten the narrative).
+### What it fixes
 
-Everything you enter is saved automatically in that browser. Sample data is included so you can see how it works — just edit or delete it. Use **Export** / **Import** (top right) to move the whole hub between computers as a single file.
+In the spreadsheet, every initiative was typed **twice** — once on the person's tab (for 1:1s) and again on the
+Operational Tracker summary — and the CEO Dashboard RAG counts were then tallied by hand. In the hub, **each
+initiative is entered once** and everything else is *derived* from it, so nothing is ever duplicated:
+
+- **🗂️ Operational Tracker** — the single source of truth. All initiatives grouped by pillar; set status, %
+  complete and the quarterly update note inline. A period selector switches between quarters.
+- **👤 My View / 1:1** — pick a person and see the initiatives they lead and support (pulled straight from the
+  tracker — editing an update here changes it everywhere), plus their **monthly 1:1 check-in log** (wins,
+  progress, blockers, focus, wellbeing). This is the space for individual progress that sits *outside* the plan
+  initiatives, and it's what you use to run 1:1 meetings.
+- **📊 Overview** — pillar-health cards whose RAG **rolls up automatically** from the initiatives beneath them,
+  a status-mix chart, initiatives-led-by-person, and a live *needs-attention* list of everything at risk / off track.
+- **📈 CEO Dashboard** — the pillar RAG table computed live (no manual tallying), plus the editable Key Metrics
+  Snapshot (targets, latest actuals, owners, data-source links).
+- **📄 Board Report** — one click compiles a formatted CEO/board report with an **auto-written executive
+  summary**, pillar-health table, key-metrics snapshot, progress this quarter, a needs-attention list, and team
+  highlights drawn from the 1:1 logs. Then **Print / Save as PDF**, **Copy as text**, or **Analyse & polish with
+  Claude**.
+
+### Keeping it updated & shared
+
+Your 2026 plan is already loaded in. Everything saves automatically in the browser on that device. **Export**
+saves the whole hub to one file; **Import** either replaces the hub or **merges** a colleague's exported file
+(their check-ins and initiative updates) into your master — so the team can feed you updates without double entry.
+For true live multi-person editing, the hub would need to be hosted (the same follow-up as the live Outlook /
+M365 connection, which is currently blocked by the company security policy).
 
 ---
 
