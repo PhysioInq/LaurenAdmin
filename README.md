@@ -1,7 +1,31 @@
-# Lauren's Personal Admin Dashboard
+# Lauren's Admin Hub
 
-A simple, private command centre for your day — no logins, no setup, nothing technical.
-Open `index.html` in any web browser and it just works.
+A simple, private command centre — no logins, no setup, nothing technical.
+Open either file in any web browser and it just works.
+
+- **`index.html`** — your personal admin dashboard (below).
+- **`team-hub.html`** — the Marketing Team Hub (department plan, projects, tasks & board reporting).
+
+The two are linked to each other by the buttons in their top bars.
+
+---
+
+# Marketing Team Hub (`team-hub.html`)
+
+A department planning & tracking hub for the marketing team — everything in one page, with six tabs:
+
+- **📊 Overview** — live snapshot: active projects, on-track vs at-risk, tasks in flight, blocked/overdue items, and team size; plus a *workload by person* chart, a *task status mix* chart, project-health bars, the next 30 days of milestones & deadlines, and a *needs-attention* list.
+- **🗂️ Projects** — a visual **timeline** (each project drawn start → target, with a "today" line), and project cards with lead, status, priority, progress and checkable milestones.
+- **✓ Tasks** — the allocation board: who's doing what, filterable by person / project / status and sortable by due date, priority or person.
+- **👥 Team** — a directory card per person: role, email, focus areas, availability, and how many active tasks they're carrying.
+- **🎯 Dept Plan** — the department's objectives with measurable key results; type in the current number and the progress fills itself.
+- **📄 Board Report** — one click compiles a formatted, ready-to-present board report: an **auto-written executive summary**, objectives progress, a project-status table, achievements this period, upcoming milestones, team workload, and a risks/blockers list. Then **Print / Save as PDF**, **Copy as text**, or **Analyse & polish with Claude** (copies the report and opens a chat so Claude can tighten the narrative).
+
+Everything you enter is saved automatically in that browser. Sample data is included so you can see how it works — just edit or delete it. Use **Export** / **Import** (top right) to move the whole hub between computers as a single file.
+
+---
+
+# Personal Admin Dashboard (`index.html`)
 
 ## What it does
 

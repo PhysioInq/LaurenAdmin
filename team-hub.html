@@ -1,0 +1,1437 @@
+<title>Marketing Team Hub — Physio Inq</title>
+<style>
+  /* ============================================================
+     DESIGN TOKENS  (shared language with the personal dashboard)
+     ============================================================ */
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f7f8;
+    --surface: #ffffff;
+    --surface-2: #eef1f3;
+    --surface-3: #e6eaed;
+    --border: #dde3e7;
+    --border-strong: #c7d0d6;
+    --ink: #16202a;
+    --ink-2: #4a5964;
+    --ink-3: #7a8892;
+    --accent: #0d7b74;
+    --accent-soft: #d8efec;
+    --accent-ink: #0a5f59;
+    --good: #17803d;
+    --good-soft: #dcf3e4;
+    --warn: #b7791f;
+    --warn-soft: #f8ecd2;
+    --crit: #c62828;
+    --crit-soft: #fadbdb;
+    --sched: #2456c9;
+    --sched-soft: #dce6fb;
+    --purple: #7c3aed;
+    --purple-soft: #ede4fb;
+    --shadow: 0 1px 2px rgba(16,32,42,.06), 0 6px 20px rgba(16,32,42,.06);
+    --shadow-lg: 0 4px 12px rgba(16,32,42,.08), 0 18px 40px rgba(16,32,42,.10);
+    --radius: 14px;
+    --radius-sm: 9px;
+    --fs-body: 15px;
+    --font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151a; --surface: #1a2229; --surface-2: #222c34; --surface-3: #2a353e;
+      --border: #2b363f; --border-strong: #3a4750;
+      --ink: #e8edf0; --ink-2: #a9b6c0; --ink-3: #74838d;
+      --accent: #33b3a8; --accent-soft: #10312e; --accent-ink: #5fd0c5;
+      --good: #4cc072; --good-soft: #102a19; --warn: #e0a53a; --warn-soft: #2e2510;
+      --crit: #f26d6d; --crit-soft: #331414; --sched: #6e9bff; --sched-soft: #131f38;
+      --purple: #a878f0; --purple-soft: #21163a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,.35), 0 20px 48px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f5f7f8; --surface: #ffffff; --surface-2: #eef1f3; --surface-3: #e6eaed; --border: #dde3e7;
+    --border-strong: #c7d0d6; --ink: #16202a; --ink-2: #4a5964; --ink-3: #7a8892;
+    --accent: #0d7b74; --accent-soft: #d8efec; --accent-ink: #0a5f59;
+    --good: #17803d; --good-soft: #dcf3e4; --warn: #b7791f; --warn-soft: #f8ecd2;
+    --crit: #c62828; --crit-soft: #fadbdb; --sched: #2456c9; --sched-soft: #dce6fb;
+    --purple: #7c3aed; --purple-soft: #ede4fb;
+    --shadow: 0 1px 2px rgba(16,32,42,.06), 0 6px 20px rgba(16,32,42,.06);
+    --shadow-lg: 0 4px 12px rgba(16,32,42,.08), 0 18px 40px rgba(16,32,42,.10);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151a; --surface: #1a2229; --surface-2: #222c34; --surface-3: #2a353e; --border: #2b363f;
+    --border-strong: #3a4750; --ink: #e8edf0; --ink-2: #a9b6c0; --ink-3: #74838d;
+    --accent: #33b3a8; --accent-soft: #10312e; --accent-ink: #5fd0c5;
+    --good: #4cc072; --good-soft: #102a19; --warn: #e0a53a; --warn-soft: #2e2510;
+    --crit: #f26d6d; --crit-soft: #331414; --sched: #6e9bff; --sched-soft: #131f38;
+    --purple: #a878f0; --purple-soft: #21163a;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,.35), 0 20px 48px rgba(0,0,0,.45);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: var(--fs-body); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 22px 20px 70px; }
+  h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+  .num { font-variant-numeric: tabular-nums; }
+  button { font-family: inherit; cursor: pointer; }
+  a { color: var(--accent-ink); }
+
+  /* ---------- Header ---------- */
+  header.top {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px;
+    justify-content: space-between; margin-bottom: 18px;
+  }
+  .brand-block { display: flex; align-items: center; gap: 14px; }
+  .brand-dot {
+    width: 46px; height: 46px; border-radius: 13px; flex: 0 0 auto;
+    background: linear-gradient(140deg, var(--accent), var(--accent-ink));
+    display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 21px;
+    box-shadow: var(--shadow);
+  }
+  .brand h1 { font-size: 22px; letter-spacing: -.3px; }
+  .brand .sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+  .header-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .qbtn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    text-decoration: none; transition: border-color .15s, transform .05s;
+  }
+  .qbtn:hover { border-color: var(--accent); }
+  .qbtn:active { transform: translateY(1px); }
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--ink-2);
+    width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 16px;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+
+  #storage-status {
+    border-radius: var(--radius-sm); padding: 9px 15px; font-size: 12.5px; font-weight: 600;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 9px; line-height: 1.45;
+  }
+  #storage-status.ok { background: var(--good-soft); color: var(--good); }
+  #storage-status.warn { background: var(--crit-soft); color: var(--crit); }
+  #storage-status:empty { display: none; }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    display: flex; gap: 4px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px; margin-bottom: 22px; box-shadow: var(--shadow); width: fit-content; max-width: 100%;
+  }
+  .tab {
+    border: none; background: transparent; color: var(--ink-2); font-weight: 600; font-size: 13.5px;
+    padding: 8px 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px;
+    transition: background .15s, color .15s;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab .pip { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+    background: rgba(0,0,0,.10); }
+  .tab.active .pip { background: rgba(255,255,255,.25); }
+
+  .view { display: none; }
+  .view.active { display: block; animation: fade .2s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Stat strip ---------- */
+  .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 22px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 15px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .stat .n { font-size: 27px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+  .stat .l { font-size: 11.5px; color: var(--ink-2); margin-top: 6px; line-height: 1.3; }
+  .stat .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .stripe.a { background: var(--accent); } .stripe.g { background: var(--good); }
+  .stripe.w { background: var(--warn); } .stripe.c { background: var(--crit); }
+  .stripe.s { background: var(--sched); } .stripe.p { background: var(--purple); }
+
+  /* ---------- Cards & grid ---------- */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; margin-bottom: 18px;
+  }
+  .card > .head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 15px 17px; border-bottom: 1px solid var(--border);
+  }
+  .card > .head h2 { font-size: 15.5px; letter-spacing: -.1px; display: flex; align-items: center; gap: 9px; }
+  .card > .head .badge {
+    font-size: 11.5px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft);
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .card .body { padding: 16px 17px; }
+  .hint { color: var(--ink-3); font-size: 12.5px; }
+  .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-3); font-weight: 700; margin: 0 0 12px; }
+
+  /* ---------- Inputs ---------- */
+  input[type="text"], input[type="date"], input[type="number"], input[type="email"], select, textarea {
+    font-family: inherit; font-size: 14px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 9px 11px; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 74px; line-height: 1.55; }
+  .field { margin-bottom: 11px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .fgrid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 11px; }
+  .btn {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 9px 16px; font-weight: 600; font-size: 13.5px; white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-ink); }
+  .btn.ghost { background: transparent; color: var(--accent-ink); border: 1px solid var(--border-strong); }
+  .btn.ghost:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .btn.sm { padding: 6px 11px; font-size: 12.5px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  details.adder { margin-top: 6px; }
+  details.adder > summary {
+    list-style: none; cursor: pointer; color: var(--accent-ink); font-weight: 600; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  details.adder > summary::-webkit-details-marker { display: none; }
+  details.adder[open] > summary { margin-bottom: 13px; }
+  .adder-box { background: var(--surface-2); border-radius: var(--radius-sm); padding: 14px; }
+
+  /* ---------- Avatars & pills ---------- */
+  .avatar {
+    width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 11px; font-weight: 700; color: #fff; flex: 0 0 auto;
+  }
+  .avatar.lg { width: 42px; height: 42px; font-size: 15px; }
+  .who-chip { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  .pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+  .pill.crit { color: var(--crit); background: var(--crit-soft); }
+  .pill.warn { color: var(--warn); background: var(--warn-soft); }
+  .pill.ok   { color: var(--sched); background: var(--sched-soft); }
+  .pill.good { color: var(--good); background: var(--good-soft); }
+  .pill.hold { color: var(--ink-2); background: var(--surface-3); }
+  .pill.pur  { color: var(--purple); background: var(--purple-soft); }
+  .chip {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--ink);
+    padding: 4px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+  }
+  .del { background: none; border: none; color: var(--ink-3); font-size: 17px; line-height: 1;
+    padding: 2px 6px; border-radius: 6px; opacity: .55; }
+  .del:hover { color: var(--crit); opacity: 1; background: var(--crit-soft); }
+  .empty { text-align: center; color: var(--ink-3); font-size: 13px; padding: 24px 8px; }
+
+  /* ---------- Progress bar ---------- */
+  .bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+  .bar > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width .4s; }
+  .bar > span.good { background: var(--good); } .bar > span.warn { background: var(--warn); }
+  .bar > span.crit { background: var(--crit); }
+
+  /* ---------- Charts ---------- */
+  .chart-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .chart-row .lab { flex: 0 0 118px; font-size: 12.5px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 7px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chart-row .track { flex: 1; height: 22px; background: var(--surface-2); border-radius: 6px; overflow: hidden; position: relative; }
+  .chart-row .fill { height: 100%; border-radius: 6px; background: var(--accent); min-width: 2px; transition: width .4s; }
+  .chart-row .val { flex: 0 0 auto; font-size: 12.5px; font-weight: 700; color: var(--ink); width: 26px; text-align: right; }
+
+  .stackbar { display: flex; height: 26px; border-radius: 7px; overflow: hidden; background: var(--surface-2); }
+  .stackbar > span { height: 100%; border-right: 2px solid var(--surface); }
+  .stackbar > span:last-child { border-right: none; }
+  .seg-todo { background: var(--ink-3); } .seg-prog { background: var(--sched); }
+  .seg-block { background: var(--crit); } .seg-review { background: var(--warn); } .seg-done { background: var(--good); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 13px; }
+  .legend .li { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+  .legend .sw { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
+
+  /* ---------- Timeline (Gantt-lite) ---------- */
+  .tl-scroll { overflow-x: auto; }
+  .tl { min-width: 640px; }
+  .tl-months { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 8px; position: relative; height: 22px; }
+  .tl-months .mo { flex: 1; font-size: 11px; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+    border-left: 1px solid var(--border); padding-left: 6px; }
+  .tl-months .mo:first-child { border-left: none; }
+  .tl-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .tl-row .name { flex: 0 0 160px; font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tl-track { flex: 1; position: relative; height: 30px; background: var(--surface-2); border-radius: 7px; }
+  .tl-bar { position: absolute; top: 4px; height: 22px; border-radius: 6px; display: flex; align-items: center;
+    padding: 0 8px; font-size: 11px; font-weight: 700; color: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  .tl-today { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--crit); z-index: 3; }
+  .tl-today::after { content: "Today"; position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; font-weight: 700; color: var(--crit); white-space: nowrap; }
+
+  /* ---------- Project / member / task cards ---------- */
+  .proj { border: 1px solid var(--border); border-radius: var(--radius); padding: 15px 16px; background: var(--surface); }
+  .proj .ptop { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .proj .pname { font-size: 15.5px; font-weight: 700; letter-spacing: -.2px; }
+  .proj .pmeta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 9px 0 11px; }
+  .proj .pdesc { font-size: 13px; color: var(--ink-2); margin: 4px 0 12px; }
+  .miles { list-style: none; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 7px; }
+  .mile { display: flex; align-items: center; gap: 9px; font-size: 12.5px; }
+  .mile .mcheck { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; flex: 0 0 auto;
+    border: 2px solid var(--border-strong); border-radius: 5px; position: relative; }
+  .mile .mcheck:checked { background: var(--good); border-color: var(--good); }
+  .mile .mcheck:checked::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .mile.done .mtitle { text-decoration: line-through; color: var(--ink-3); }
+  .mile .mtitle { flex: 1; } .mile .mdate { color: var(--ink-3); }
+
+  .task {
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 13px;
+    margin-bottom: 9px; background: var(--surface);
+  }
+  .task .tl2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .task .tt { font-size: 14px; font-weight: 600; margin: 8px 0 3px; }
+  .task .foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
+  .status-sel { width: auto; padding: 5px 10px; font-size: 12px; font-weight: 600; border-radius: 999px; }
+  .prio-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+  .prio-high { background: var(--crit); } .prio-med { background: var(--warn); } .prio-low { background: var(--ink-3); }
+
+  .member { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--surface); position: relative; }
+  .member .mtop { display: flex; align-items: center; gap: 12px; }
+  .member .mname { font-size: 15px; font-weight: 700; }
+  .member .mrole { font-size: 12.5px; color: var(--ink-2); }
+  .member .mstat { position: absolute; top: 14px; right: 14px; }
+  .member .mfocus { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .member .mfoot { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--ink-2); }
+
+  /* ---------- Objectives ---------- */
+  .obj { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--surface); }
+  .obj .otop { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .obj .otitle { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+  .obj .odesc { font-size: 12.5px; color: var(--ink-2); margin: 5px 0 12px; }
+  .kr { margin-bottom: 11px; }
+  .kr .krtop { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+  .kr .krlab { font-size: 12.5px; color: var(--ink); }
+  .kr .krval { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+
+  /* ---------- Board report ---------- */
+  .report-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .report {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 30px 34px; box-shadow: var(--shadow); margin-top: 18px; line-height: 1.6;
+  }
+  .report h2.rt { font-size: 22px; letter-spacing: -.4px; margin-bottom: 4px; }
+  .report .rperiod { color: var(--ink-2); font-size: 13.5px; margin-bottom: 22px; }
+  .report h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .7px; color: var(--accent-ink);
+    margin: 26px 0 11px; padding-bottom: 7px; border-bottom: 2px solid var(--accent-soft); }
+  .report h3:first-of-type { margin-top: 6px; }
+  .report p { margin: 0 0 12px; font-size: 14.5px; color: var(--ink); }
+  .report ul { margin: 0 0 12px; padding-left: 20px; }
+  .report li { margin-bottom: 5px; font-size: 14px; }
+  .report table { width: 100%; border-collapse: collapse; margin: 4px 0 14px; font-size: 13.5px; }
+  .report th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-3);
+    border-bottom: 2px solid var(--border); padding: 7px 9px; }
+  .report td { padding: 8px 9px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .report .exec { background: var(--accent-soft); border-radius: var(--radius-sm); padding: 15px 17px; margin-bottom: 8px; }
+  .report .exec p:last-child { margin-bottom: 0; }
+  .report .rfoot { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--ink-3); font-size: 12px; }
+  .report-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: .25s; z-index: 90;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  footer.tips {
+    margin-top: 26px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  footer.tips h3 { font-size: 14px; margin-bottom: 10px; }
+  footer.tips ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13.5px; }
+  footer.tips li { margin-bottom: 6px; }
+
+  @media (max-width: 960px) {
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 720px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .fgrid, .fgrid-3 { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* ---------- Print (board report to paper / PDF) ---------- */
+  @media print {
+    body { background: #fff; }
+    .wrap { max-width: none; padding: 0; }
+    header.top, .tabs, #storage-status, .report-controls, .report-actions, footer.tips, .toast, .no-print { display: none !important; }
+    .view { display: none !important; }
+    .view.active { display: block !important; }
+    .report { box-shadow: none; border: none; padding: 0; margin: 0; }
+    .report h3 { color: #0a5f59; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand-block">
+      <div class="brand-dot">M</div>
+      <div class="brand">
+        <h1>Marketing Team Hub</h1>
+        <div class="sub" id="subline">Physio Inq · Department plan &amp; tracking</div>
+      </div>
+    </div>
+    <div class="header-tools">
+      <a class="qbtn" href="index.html">← My Dashboard</a>
+      <a class="qbtn" href="https://teams.microsoft.com/" target="_blank" rel="noopener">💬 Teams</a>
+      <a class="qbtn" href="https://outlook.office.com/mail/" target="_blank" rel="noopener">📧 Email</a>
+      <button class="qbtn" id="backupBtn" title="Save everything to a file">⬇︎ Export</button>
+      <button class="qbtn" id="restoreBtn" title="Load everything back from a file">⬆︎ Import</button>
+      <button class="icon-btn" id="themeBtn" title="Switch light / dark">◐</button>
+    </div>
+  </header>
+
+  <div id="storage-status" role="status"></div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-view="overview">📊 Overview</button>
+    <button class="tab" data-view="projects">🗂️ Projects <span class="pip" id="pip-proj">0</span></button>
+    <button class="tab" data-view="tasks">✓ Tasks <span class="pip" id="pip-task">0</span></button>
+    <button class="tab" data-view="team">👥 Team <span class="pip" id="pip-team">0</span></button>
+    <button class="tab" data-view="plan">🎯 Dept Plan <span class="pip" id="pip-obj">0</span></button>
+    <button class="tab" data-view="report">📄 Board Report</button>
+  </nav>
+
+  <!-- ============================ OVERVIEW ============================ -->
+  <section class="view active" id="view-overview">
+    <div class="stats" id="stat-strip"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="head"><h2>📈 Workload by team member</h2><span class="badge">active tasks</span></div>
+        <div class="body" id="chart-workload"></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>🧭 Task status mix</h2><span class="badge" id="task-total-badge">0</span></div>
+        <div class="body" id="chart-status"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="head"><h2>🚦 Project health</h2></div>
+        <div class="body" id="proj-health"></div>
+      </div>
+      <div style="display:flex; flex-direction:column;">
+        <div class="card">
+          <div class="head"><h2>📅 Upcoming milestones &amp; deadlines</h2><span class="badge">next 30 days</span></div>
+          <div class="body" id="upcoming"></div>
+        </div>
+        <div class="card">
+          <div class="head"><h2>⚠️ Needs attention</h2></div>
+          <div class="body" id="attention"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ PROJECTS ============================ -->
+  <section class="view" id="view-projects">
+    <div class="card">
+      <div class="head"><h2>🗓️ Project timeline</h2><span class="badge">start → target</span></div>
+      <div class="body">
+        <div class="tl-scroll"><div class="tl" id="timeline"></div></div>
+        <p class="hint" style="margin:12px 0 0;">Each bar spans a project's start and target dates. The red line marks today.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head">
+        <h2>🗂️ Projects</h2>
+        <span class="badge" id="proj-count-badge">0</span>
+      </div>
+      <div class="body">
+        <div class="grid2" id="proj-list"></div>
+        <details class="adder" style="margin-top:16px;">
+          <summary>＋ Add a project</summary>
+          <div class="adder-box">
+            <div class="field"><label>Project name</label><input type="text" id="p-name" placeholder="e.g. Q3 patient acquisition campaign"></div>
+            <div class="field"><label>Description / goal</label><textarea id="p-desc" placeholder="What is this project delivering, and why?"></textarea></div>
+            <div class="fgrid-3">
+              <div class="field"><label>Lead</label><select id="p-lead"></select></div>
+              <div class="field"><label>Status</label>
+                <select id="p-status">
+                  <option value="track">On track</option>
+                  <option value="risk">At risk</option>
+                  <option value="late">Delayed</option>
+                  <option value="hold">On hold</option>
+                  <option value="done">Complete</option>
+                </select>
+              </div>
+              <div class="field"><label>Priority</label>
+                <select id="p-prio"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
+              </div>
+            </div>
+            <div class="fgrid-3">
+              <div class="field"><label>Start date</label><input type="date" id="p-start"></div>
+              <div class="field"><label>Target date</label><input type="date" id="p-due"></div>
+              <div class="field"><label>Progress %</label><input type="number" id="p-prog" min="0" max="100" value="0"></div>
+            </div>
+            <button class="btn" id="p-add">Add project</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ TASKS ============================ -->
+  <section class="view" id="view-tasks">
+    <div class="card">
+      <div class="head">
+        <h2>✓ Task allocation</h2>
+        <span class="badge" id="task-count-badge">0 active</span>
+      </div>
+      <div class="body">
+        <div class="row" style="margin-bottom:14px;">
+          <select id="f-assignee" style="width:auto;"><option value="">All people</option></select>
+          <select id="f-project" style="width:auto;"><option value="">All projects</option></select>
+          <select id="f-status" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="todo">To do</option><option value="prog">In progress</option>
+            <option value="block">Blocked</option><option value="review">In review</option><option value="done">Done</option>
+          </select>
+          <select id="f-sort" style="width:auto;">
+            <option value="due">Sort: due date</option>
+            <option value="prio">Sort: priority</option>
+            <option value="assignee">Sort: person</option>
+          </select>
+        </div>
+        <div id="task-list"></div>
+        <details class="adder" style="margin-top:14px;">
+          <summary>＋ Assign a task</summary>
+          <div class="adder-box">
+            <div class="field"><label>Task</label><input type="text" id="t-title" placeholder="e.g. Draft the September newsletter"></div>
+            <div class="fgrid">
+              <div class="field"><label>Assign to</label><select id="t-who"></select></div>
+              <div class="field"><label>Project</label><select id="t-proj"></select></div>
+            </div>
+            <div class="fgrid-3">
+              <div class="field"><label>Status</label>
+                <select id="t-status"><option value="todo">To do</option><option value="prog">In progress</option>
+                  <option value="block">Blocked</option><option value="review">In review</option><option value="done">Done</option></select>
+              </div>
+              <div class="field"><label>Priority</label>
+                <select id="t-prio"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
+              </div>
+              <div class="field"><label>Due date</label><input type="date" id="t-due"></div>
+            </div>
+            <div class="field"><label>Note (optional)</label><input type="text" id="t-note" placeholder="Any detail or link"></div>
+            <button class="btn" id="t-add">Add &amp; assign</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ TEAM ============================ -->
+  <section class="view" id="view-team">
+    <div class="card">
+      <div class="head"><h2>👥 Team directory</h2><span class="badge" id="team-count-badge">0</span></div>
+      <div class="body">
+        <div class="grid3" id="team-list"></div>
+        <details class="adder" style="margin-top:16px;">
+          <summary>＋ Add a team member</summary>
+          <div class="adder-box">
+            <div class="fgrid">
+              <div class="field"><label>Name</label><input type="text" id="m-name" placeholder="Full name"></div>
+              <div class="field"><label>Role</label><input type="text" id="m-role" placeholder="e.g. Content Lead"></div>
+            </div>
+            <div class="fgrid">
+              <div class="field"><label>Email</label><input type="email" id="m-email" placeholder="name@physioinq.com.au"></div>
+              <div class="field"><label>Availability</label>
+                <select id="m-avail"><option value="free">Available</option><option value="busy">At capacity</option><option value="leave">On leave</option></select>
+              </div>
+            </div>
+            <div class="field"><label>Focus areas (comma separated)</label><input type="text" id="m-focus" placeholder="e.g. Social, Content, Email"></div>
+            <button class="btn" id="m-add">Add member</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ DEPT PLAN ============================ -->
+  <section class="view" id="view-plan">
+    <div class="card">
+      <div class="head"><h2>🎯 Department plan &amp; objectives</h2><span class="badge" id="obj-count-badge">0</span></div>
+      <div class="body">
+        <p class="hint" style="margin:0 0 16px;">The team's goals for the period, each with measurable key results. Update the current numbers and the progress fills automatically.</p>
+        <div class="grid2" id="obj-list"></div>
+        <details class="adder" style="margin-top:16px;">
+          <summary>＋ Add an objective</summary>
+          <div class="adder-box">
+            <div class="field"><label>Objective</label><input type="text" id="o-title" placeholder="e.g. Grow qualified enquiries from digital channels"></div>
+            <div class="field"><label>Why it matters (optional)</label><textarea id="o-desc" placeholder="Context for the board"></textarea></div>
+            <div class="fgrid">
+              <div class="field"><label>Owner</label><select id="o-owner"></select></div>
+              <div class="field"><label>Period</label><input type="text" id="o-quarter" placeholder="e.g. Q3 FY26"></div>
+            </div>
+            <div class="section-title" style="margin-top:6px;">Key results</div>
+            <div id="o-krs"></div>
+            <button class="btn ghost sm" id="o-add-kr" type="button">＋ Add a key result</button>
+            <div style="margin-top:14px;"><button class="btn" id="o-add">Add objective</button></div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ BOARD REPORT ============================ -->
+  <section class="view" id="view-report">
+    <div class="card no-print">
+      <div class="head"><h2>📄 Board report generator</h2></div>
+      <div class="body">
+        <p class="hint" style="margin:0 0 15px;">Pulls everything from the hub into a formatted, ready-to-present board report — with an automatic written summary of what's on track, what's at risk, and what the team delivered.</p>
+        <div class="report-controls">
+          <div class="field" style="margin:0;"><label>Reporting period label</label><input type="text" id="r-period" placeholder="e.g. July 2026 — Board Meeting" style="min-width:260px;"></div>
+          <div class="field" style="margin:0;"><label>Prepared by</label><input type="text" id="r-author" placeholder="Your name" style="min-width:180px;"></div>
+          <button class="btn" id="r-generate">Generate report</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="report-out"></div>
+  </section>
+
+  <footer class="tips no-print">
+    <h3>How this hub keeps your information safe</h3>
+    <ul>
+      <li><strong>The bar at the top is your saving light.</strong> Green ✓ means everything is saved automatically on this device. If it turns red ⚠️, use <strong>Export</strong> straight away.</li>
+      <li><strong>Export / Import (top right).</strong> Export saves the whole hub — team, projects, tasks, plan — to one file. Import loads it back, e.g. on a new computer. Do an Export every week or two as a safety net.</li>
+      <li><strong>Board Report → Generate</strong> compiles a written summary and status tables. Use <strong>Copy</strong>, <strong>Print / Save as PDF</strong>, or <strong>Analyse with Claude</strong> to have the narrative polished before the meeting.</li>
+      <li>For automatic saving forever, keep this <code>team-hub.html</code> file in a folder on your computer and always open it from there.</li>
+    </ul>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= STORAGE ================= */
+  var LS = {
+    team: "mth_team_v1", projects: "mth_projects_v1", tasks: "mth_tasks_v1",
+    objectives: "mth_objectives_v1", theme: "mth_theme_v1", report: "mth_report_v1"
+  };
+  var $ = function (id) { return document.getElementById(id); };
+  function load(k, fb) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch (e) { return fb; } }
+  var saveFailed = false;
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { saveFailed = true; } }
+  function storageWorks() {
+    try { var k = "__mth_test__"; localStorage.setItem(k, "1"); var ok = localStorage.getItem(k) === "1"; localStorage.removeItem(k); return ok; }
+    catch (e) { return false; }
+  }
+  var storageOK = storageWorks();
+  function uid() { return Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2000);
+  }
+
+  /* ================= DATE HELPERS ================= */
+  function todayMid() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  function parseDate(s) { if (!s) return null; var p = String(s).split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function plusDays(n) { var d = todayMid(); d.setDate(d.getDate() + n); return iso(d); }
+  function daysUntil(s) { var d = parseDate(s); return d ? Math.round((d - todayMid()) / 86400000) : null; }
+  function fmtShort(s) { var d = parseDate(s); return d ? d.toLocaleDateString(undefined, { day: "numeric", month: "short" }) : ""; }
+  function fmtLong(d) { return d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }); }
+
+  var COLORS = ["#0d7b74", "#2456c9", "#b7791f", "#7c3aed", "#c62828", "#0891b2", "#65a30d", "#db2777"];
+  function colorFor(name) { var h = 0; name = name || "?"; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0; return COLORS[h % COLORS.length]; }
+  function initials(name) { var p = String(name || "?").trim().split(/\s+/); return ((p[0] || "?")[0] + (p[1] ? p[1][0] : "")).toUpperCase(); }
+
+  /* ================= REFERENCE DATA ================= */
+  var PROJ_STATUS = {
+    track: { label: "On track", pill: "good" }, risk: { label: "At risk", pill: "warn" },
+    late: { label: "Delayed", pill: "crit" }, hold: { label: "On hold", pill: "hold" },
+    done: { label: "Complete", pill: "ok" }
+  };
+  var TASK_STATUS = [
+    { v: "todo", label: "To do", seg: "seg-todo", color: "var(--ink-3)" },
+    { v: "prog", label: "In progress", seg: "seg-prog", color: "var(--sched)" },
+    { v: "block", label: "Blocked", seg: "seg-block", color: "var(--crit)" },
+    { v: "review", label: "In review", seg: "seg-review", color: "var(--warn)" },
+    { v: "done", label: "Done", seg: "seg-done", color: "var(--good)" }
+  ];
+  function taskStatus(v) { for (var i = 0; i < TASK_STATUS.length; i++) if (TASK_STATUS[i].v === v) return TASK_STATUS[i]; return TASK_STATUS[0]; }
+  var PRIO = { high: "High", med: "Medium", low: "Low" };
+
+  /* ================= SEED DATA ================= */
+  var team = load(LS.team, [
+    { id: uid(), name: "Sam Rivera", role: "Marketing Manager", email: "sam.r@physioinq.com.au", focus: ["Strategy", "Campaigns", "Reporting"], avail: "busy" },
+    { id: uid(), name: "Priya Patel", role: "Content Lead", email: "priya.p@physioinq.com.au", focus: ["Content", "SEO", "Blog"], avail: "free" },
+    { id: uid(), name: "Jordan Lee", role: "Social & Community", email: "jordan.l@physioinq.com.au", focus: ["Social", "Community", "Video"], avail: "free" },
+    { id: uid(), name: "Mia Chen", role: "Designer", email: "mia.c@physioinq.com.au", focus: ["Design", "Brand", "Print"], avail: "busy" },
+    { id: uid(), name: "Tom Wallace", role: "Digital & Paid", email: "tom.w@physioinq.com.au", focus: ["Paid ads", "Email", "Analytics"], avail: "leave" }
+  ]);
+  function memberName(id) { for (var i = 0; i < team.length; i++) if (team[i].id === id) return team[i].name; return "Unassigned"; }
+
+  var _t = team;
+  var projects = load(LS.projects, [
+    { id: uid(), name: "Website refresh", desc: "Rebuild key service pages for clarity and conversion, mobile-first.", lead: _t[3] && _t[3].id, status: "track", prio: "high", start: plusDays(-24), due: plusDays(38), progress: 55,
+      milestones: [ { id: uid(), title: "Wireframes signed off", date: plusDays(-10), done: true }, { id: uid(), title: "New copy drafted", date: plusDays(6), done: false }, { id: uid(), title: "Go live", date: plusDays(38), done: false } ] },
+    { id: uid(), name: "Q3 patient acquisition campaign", desc: "Multi-channel campaign to lift new-client enquiries across paid, social and email.", lead: _t[0] && _t[0].id, status: "risk", prio: "high", start: plusDays(-8), due: plusDays(52), progress: 30,
+      milestones: [ { id: uid(), title: "Creative concepts approved", date: plusDays(4), done: false }, { id: uid(), title: "Campaign live", date: plusDays(20), done: false } ] },
+    { id: uid(), name: "Brand style refresh", desc: "Update the visual identity and templates across all clinics.", lead: _t[3] && _t[3].id, status: "track", prio: "med", start: plusDays(-40), due: plusDays(10), progress: 78,
+      milestones: [ { id: uid(), title: "Style guide v2", date: plusDays(-5), done: true }, { id: uid(), title: "Roll out templates", date: plusDays(10), done: false } ] },
+    { id: uid(), name: "Monthly newsletter programme", desc: "Ongoing patient newsletter — nurture and retention.", lead: _t[1] && _t[1].id, status: "track", prio: "low", start: plusDays(-60), due: plusDays(120), progress: 50,
+      milestones: [ { id: uid(), title: "July edition sent", date: plusDays(-2), done: true }, { id: uid(), title: "August edition", date: plusDays(26), done: false } ] }
+  ]);
+  function projectName(id) { for (var i = 0; i < projects.length; i++) if (projects[i].id === id) return projects[i].name; return ""; }
+
+  var _p = projects;
+  var tasks = load(LS.tasks, [
+    { id: uid(), title: "Draft new homepage copy", who: _t[1] && _t[1].id, projectId: _p[0] && _p[0].id, status: "prog", prio: "high", due: plusDays(5), note: "Focus on first-visit patients" },
+    { id: uid(), title: "Design service-page layout", who: _t[3] && _t[3].id, projectId: _p[0] && _p[0].id, status: "review", prio: "high", due: plusDays(3), note: "" },
+    { id: uid(), title: "Build campaign landing page", who: _t[4] && _t[4].id, projectId: _p[1] && _p[1].id, status: "block", prio: "high", due: plusDays(-1), note: "Waiting on final offer sign-off" },
+    { id: uid(), title: "Shoot testimonial videos", who: _t[2] && _t[2].id, projectId: _p[1] && _p[1].id, status: "todo", prio: "med", due: plusDays(12), note: "3 clinics" },
+    { id: uid(), title: "Update clinic email signatures", who: _t[3] && _t[3].id, projectId: _p[2] && _p[2].id, status: "todo", prio: "low", due: plusDays(9), note: "" },
+    { id: uid(), title: "Write August newsletter", who: _t[1] && _t[1].id, projectId: _p[3] && _p[3].id, status: "prog", prio: "med", due: plusDays(20), note: "" },
+    { id: uid(), title: "Set up paid social audiences", who: _t[4] && _t[4].id, projectId: _p[1] && _p[1].id, status: "todo", prio: "med", due: plusDays(14), note: "" },
+    { id: uid(), title: "Publish July newsletter", who: _t[1] && _t[1].id, projectId: _p[3] && _p[3].id, status: "done", prio: "med", due: plusDays(-2), note: "" },
+    { id: uid(), title: "Approve style guide v2", who: _t[0] && _t[0].id, projectId: _p[2] && _p[2].id, status: "done", prio: "med", due: plusDays(-5), note: "" }
+  ]);
+
+  var objectives = load(LS.objectives, [
+    { id: uid(), title: "Grow qualified enquiries from digital channels", desc: "Lift new-patient enquiries generated through the website, paid and social.", owner: _t[0] && _t[0].id, quarter: "Q3 FY26",
+      krs: [ { id: uid(), label: "Monthly web enquiries", current: 168, target: 240, unit: "" }, { id: uid(), label: "Cost per enquiry", current: 42, target: 30, unit: "$", lowerBetter: true }, { id: uid(), label: "Organic sessions", current: 22000, target: 30000, unit: "" } ] },
+    { id: uid(), title: "Strengthen brand consistency across clinics", desc: "Every clinic using the refreshed brand and templates.", owner: _t[3] && _t[3].id, quarter: "Q3 FY26",
+      krs: [ { id: uid(), label: "Clinics on new templates", current: 18, target: 30, unit: "" }, { id: uid(), label: "Brand assets updated", current: 40, target: 100, unit: "%" } ] },
+    { id: uid(), title: "Build the content engine", desc: "A reliable, repeatable content pipeline for owned channels.", owner: _t[1] && _t[1].id, quarter: "Q3 FY26",
+      krs: [ { id: uid(), label: "Blog posts published", current: 5, target: 12, unit: "" }, { id: uid(), label: "Newsletter open rate", current: 34, target: 40, unit: "%" } ] }
+  ]);
+
+  function saveAll() { save(LS.team, team); save(LS.projects, projects); save(LS.tasks, tasks); save(LS.objectives, objectives); }
+
+  /* ================= OBJECTIVE PROGRESS ================= */
+  function krProgress(kr) {
+    var cur = +kr.current || 0, tgt = +kr.target || 0;
+    if (kr.lowerBetter) {
+      if (cur <= tgt) return 100;
+      // scale between target (100%) and 2x target (0%)
+      var span = tgt; if (span <= 0) return 0;
+      return Math.max(0, Math.min(100, Math.round((1 - (cur - tgt) / span) * 100)));
+    }
+    if (tgt <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((cur / tgt) * 100)));
+  }
+  function objProgress(o) {
+    if (!o.krs || !o.krs.length) return 0;
+    var sum = 0; o.krs.forEach(function (k) { sum += krProgress(k); }); return Math.round(sum / o.krs.length);
+  }
+  function progClass(p) { return p >= 70 ? "good" : (p >= 40 ? "warn" : "crit"); }
+
+  /* ================= THEME ================= */
+  var savedTheme = load(LS.theme, null);
+  if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+  $("themeBtn").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var isDark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next); save(LS.theme, next);
+  });
+  $("subline").textContent = "Physio Inq · Department plan & tracking · " + fmtLong(new Date());
+
+  /* ================= TABS ================= */
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".tab"); if (!b) return;
+    var v = b.getAttribute("data-view");
+    document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t === b); });
+    document.querySelectorAll(".view").forEach(function (s) { s.classList.toggle("active", s.id === "view-" + v); });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  /* ================= SELECT POPULATION ================= */
+  function fillMemberSelects() {
+    var opts = team.map(function (m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>'; }).join("");
+    ["p-lead", "t-who", "o-owner"].forEach(function (id) {
+      var el = $(id); if (!el) return; var cur = el.value;
+      el.innerHTML = (id === "t-who" ? '<option value="">— Unassigned —</option>' : "") + opts;
+      if (cur) el.value = cur;
+    });
+    var fa = $("f-assignee"); if (fa) { var c = fa.value; fa.innerHTML = '<option value="">All people</option>' + opts; fa.value = c; }
+  }
+  function fillProjectSelects() {
+    var opts = projects.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join("");
+    var tp = $("t-proj"); if (tp) { var c = tp.value; tp.innerHTML = '<option value="">— No project —</option>' + opts; tp.value = c; }
+    var fp = $("f-project"); if (fp) { var c2 = fp.value; fp.innerHTML = '<option value="">All projects</option>' + opts; fp.value = c2; }
+  }
+
+  /* ================= OVERVIEW ================= */
+  function activeTasks() { return tasks.filter(function (t) { return t.status !== "done"; }); }
+  function renderStats() {
+    var active = projects.filter(function (p) { return p.status !== "done"; });
+    var atRisk = projects.filter(function (p) { return p.status === "risk" || p.status === "late"; }).length;
+    var onTrack = projects.filter(function (p) { return p.status === "track"; }).length;
+    var inFlight = activeTasks().length;
+    var stuck = tasks.filter(function (t) { return t.status === "block" || (t.status !== "done" && daysUntil(t.due) !== null && daysUntil(t.due) < 0); }).length;
+    var data = [
+      { n: active.length, l: "Active projects", s: "a" },
+      { n: onTrack, l: "On track", s: "g" },
+      { n: atRisk, l: "At risk / delayed", s: "w" },
+      { n: inFlight, l: "Tasks in flight", s: "s" },
+      { n: stuck, l: "Blocked / overdue", s: "c" },
+      { n: team.length, l: "Team members", s: "p" }
+    ];
+    $("stat-strip").innerHTML = data.map(function (d) {
+      return '<div class="stat"><span class="stripe ' + d.s + '"></span><div class="n num">' + d.n + '</div><div class="l">' + d.l + '</div></div>';
+    }).join("");
+    $("pip-proj").textContent = projects.length;
+    $("pip-task").textContent = inFlight;
+    $("pip-team").textContent = team.length;
+    $("pip-obj").textContent = objectives.length;
+    $("proj-count-badge").textContent = projects.length;
+    $("task-count-badge").textContent = inFlight + " active";
+    $("team-count-badge").textContent = team.length + " people";
+    $("obj-count-badge").textContent = objectives.length + " objectives";
+  }
+
+  function renderWorkloadChart() {
+    var counts = team.map(function (m) {
+      return { name: m.name, id: m.id, count: activeTasks().filter(function (t) { return t.who === m.id; }).length };
+    });
+    counts.sort(function (a, b) { return b.count - a.count; });
+    var max = Math.max(1, counts[0] ? counts[0].count : 0);
+    var el = $("chart-workload");
+    if (!team.length) { el.innerHTML = '<div class="empty">Add team members to see workload.</div>'; return; }
+    el.innerHTML = counts.map(function (c) {
+      var w = Math.round((c.count / max) * 100);
+      return '<div class="chart-row">' +
+        '<span class="lab"><span class="avatar" style="width:18px;height:18px;font-size:9px;background:' + colorFor(c.name) + '">' + esc(initials(c.name)) + '</span>' + esc(c.name) + '</span>' +
+        '<span class="track"><span class="fill" style="width:' + w + '%"></span></span>' +
+        '<span class="val num">' + c.count + '</span></div>';
+    }).join("");
+  }
+
+  function renderStatusChart() {
+    var el = $("chart-status");
+    var total = tasks.length;
+    $("task-total-badge").textContent = total + " tasks";
+    if (!total) { el.innerHTML = '<div class="empty">No tasks yet.</div>'; return; }
+    var segs = TASK_STATUS.map(function (s) {
+      var n = tasks.filter(function (t) { return t.status === s.v; }).length;
+      return { s: s, n: n, pct: (n / total) * 100 };
+    });
+    var bar = '<div class="stackbar">' + segs.filter(function (x) { return x.n > 0; }).map(function (x) {
+      return '<span class="' + x.s.seg + '" style="width:' + x.pct + '%" title="' + x.s.label + ': ' + x.n + '"></span>';
+    }).join("") + '</div>';
+    var legend = '<div class="legend">' + segs.map(function (x) {
+      return '<span class="li"><span class="sw" style="background:' + x.s.color + '"></span>' + x.s.label + ' <strong class="num">' + x.n + '</strong></span>';
+    }).join("") + '</div>';
+    el.innerHTML = bar + legend;
+  }
+
+  function renderProjHealth() {
+    var el = $("proj-health");
+    if (!projects.length) { el.innerHTML = '<div class="empty">No projects yet.</div>'; return; }
+    var sorted = projects.slice().sort(function (a, b) {
+      var rank = { late: 0, risk: 1, hold: 2, track: 3, done: 4 };
+      return (rank[a.status] || 3) - (rank[b.status] || 3);
+    });
+    el.innerHTML = sorted.map(function (p) {
+      var st = PROJ_STATUS[p.status] || PROJ_STATUS.track;
+      var prog = +p.progress || 0;
+      return '<div style="margin-bottom:14px;">' +
+        '<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">' +
+          '<span style="font-weight:600; font-size:13.5px;">' + esc(p.name) + '</span>' +
+          '<span class="pill ' + st.pill + '">' + st.label + '</span></div>' +
+        '<div style="display:flex; align-items:center; gap:10px;">' +
+          '<div class="bar" style="flex:1;"><span class="' + progClass(prog) + '" style="width:' + prog + '%"></span></div>' +
+          '<span class="num" style="font-size:12px; font-weight:700; color:var(--ink-2); width:34px; text-align:right;">' + prog + '%</span></div></div>';
+    }).join("");
+  }
+
+  function renderUpcoming() {
+    var el = $("upcoming");
+    var items = [];
+    projects.forEach(function (p) {
+      (p.milestones || []).forEach(function (m) {
+        if (m.done) return; var du = daysUntil(m.date);
+        if (du !== null && du >= 0 && du <= 30) items.push({ date: m.date, du: du, title: m.title, ctx: p.name, kind: "Milestone" });
+      });
+    });
+    tasks.forEach(function (t) {
+      if (t.status === "done" || !t.due) return; var du = daysUntil(t.due);
+      if (du !== null && du >= 0 && du <= 30) items.push({ date: t.due, du: du, title: t.title, ctx: memberName(t.who), kind: "Task" });
+    });
+    items.sort(function (a, b) { return a.du - b.du; });
+    if (!items.length) { el.innerHTML = '<div class="empty">Nothing due in the next 30 days.</div>'; return; }
+    el.innerHTML = items.slice(0, 8).map(function (i) {
+      var pill = i.du === 0 ? '<span class="pill crit">Today</span>' : (i.du <= 3 ? '<span class="pill warn">in ' + i.du + 'd</span>' : '<span class="pill ok">in ' + i.du + 'd</span>');
+      return '<div class="deadline" style="display:flex; gap:11px; padding:9px 0; border-bottom:1px solid var(--border); align-items:center;">' +
+        '<div style="flex:0 0 52px; text-align:center;"><div class="num" style="font-size:17px; font-weight:700;">' + parseDate(i.date).getDate() + '</div>' +
+        '<div style="font-size:10px; text-transform:uppercase; color:var(--ink-3);">' + parseDate(i.date).toLocaleDateString(undefined, { month: "short" }) + '</div></div>' +
+        '<div style="flex:1; min-width:0;"><div style="font-weight:600; font-size:13.5px;">' + esc(i.title) + '</div>' +
+        '<div class="hint">' + i.kind + ' · ' + esc(i.ctx) + '</div></div>' + pill + '</div>';
+    }).join("");
+  }
+
+  function renderAttention() {
+    var el = $("attention");
+    var out = [];
+    projects.filter(function (p) { return p.status === "risk" || p.status === "late"; }).forEach(function (p) {
+      out.push({ pill: p.status === "late" ? "crit" : "warn", label: PROJ_STATUS[p.status].label, title: p.name, sub: "Project · lead " + memberName(p.lead) });
+    });
+    tasks.filter(function (t) { return t.status === "block"; }).forEach(function (t) {
+      out.push({ pill: "crit", label: "Blocked", title: t.title, sub: memberName(t.who) + (t.note ? " · " + t.note : "") });
+    });
+    tasks.filter(function (t) { return t.status !== "done" && daysUntil(t.due) !== null && daysUntil(t.due) < 0; }).forEach(function (t) {
+      out.push({ pill: "crit", label: Math.abs(daysUntil(t.due)) + "d overdue", title: t.title, sub: memberName(t.who) });
+    });
+    if (!out.length) { el.innerHTML = '<div class="empty">✓ Nothing flagged — all clear.</div>'; return; }
+    el.innerHTML = out.map(function (o) {
+      return '<div style="display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border);">' +
+        '<span class="pill ' + o.pill + '">' + esc(o.label) + '</span>' +
+        '<div style="flex:1; min-width:0;"><div style="font-weight:600; font-size:13.5px;">' + esc(o.title) + '</div>' +
+        '<div class="hint">' + esc(o.sub) + '</div></div></div>';
+    }).join("");
+  }
+
+  /* ================= TIMELINE ================= */
+  function renderTimeline() {
+    var el = $("timeline");
+    var withDates = projects.filter(function (p) { return p.start && p.due; });
+    if (!withDates.length) { el.innerHTML = '<div class="empty">Add projects with start and target dates to see the timeline.</div>'; return; }
+    var min = null, max = null;
+    withDates.forEach(function (p) {
+      var s = parseDate(p.start), d = parseDate(p.due);
+      if (!min || s < min) min = s; if (!max || d > max) max = d;
+    });
+    var t = todayMid(); if (t < min) min = t; if (t > max) max = t;
+    // pad a little
+    min = new Date(min.getFullYear(), min.getMonth(), 1);
+    max = new Date(max.getFullYear(), max.getMonth() + 1, 0);
+    var span = (max - min) || 1;
+    function pct(d) { return ((d - min) / span) * 100; }
+
+    // month headers
+    var months = []; var cur = new Date(min.getFullYear(), min.getMonth(), 1);
+    while (cur <= max) { months.push(new Date(cur)); cur.setMonth(cur.getMonth() + 1); }
+    var moHtml = '<div class="tl-months">' + months.map(function (m) {
+      return '<div class="mo">' + m.toLocaleDateString(undefined, { month: "short" }) + (m.getMonth() === 0 ? " " + String(m.getFullYear()).slice(2) : "") + '</div>';
+    }).join("") + '</div>';
+
+    var rows = projects.map(function (p) {
+      if (!p.start || !p.due) {
+        return '<div class="tl-row"><div class="name">' + esc(p.name) + '</div><div class="tl-track"><span class="hint" style="padding-left:8px; line-height:30px;">no dates</span></div></div>';
+      }
+      var s = parseDate(p.start), d = parseDate(p.due);
+      var left = Math.max(0, pct(s)), right = Math.min(100, pct(d));
+      var w = Math.max(2, right - left);
+      var col = p.status === "late" ? "var(--crit)" : (p.status === "risk" ? "var(--warn)" : (p.status === "done" ? "var(--sched)" : "var(--accent)"));
+      return '<div class="tl-row"><div class="name" title="' + esc(p.name) + '">' + esc(p.name) + '</div>' +
+        '<div class="tl-track"><div class="tl-bar" style="left:' + left + '%; width:' + w + '%; background:' + col + '">' + (p.progress || 0) + '%</div></div></div>';
+    }).join("");
+
+    var todayLine = '<div class="tl-row" style="height:0; margin:0; position:relative;"></div>';
+    el.innerHTML = moHtml + '<div style="position:relative;">' + rows +
+      '<div class="tl-today" style="left:calc(160px + 12px + (100% - 172px) * ' + (pct(t) / 100) + ');"></div></div>';
+  }
+
+  /* ================= PROJECTS ================= */
+  function renderProjects() {
+    var el = $("proj-list");
+    if (!projects.length) { el.innerHTML = '<div class="empty">No projects yet — add your first below.</div>'; return; }
+    el.innerHTML = "";
+    projects.forEach(function (p) {
+      var st = PROJ_STATUS[p.status] || PROJ_STATUS.track;
+      var prog = +p.progress || 0;
+      var taskCount = tasks.filter(function (t) { return t.projectId === p.id && t.status !== "done"; }).length;
+      var lead = memberName(p.lead);
+      var due = daysUntil(p.due);
+      var dueTxt = p.due ? (due < 0 ? Math.abs(due) + "d overdue" : (due === 0 ? "due today" : "due " + fmtShort(p.due))) : "";
+      var miles = (p.milestones || []).map(function (m) {
+        return '<li class="mile' + (m.done ? " done" : "") + '" data-mid="' + m.id + '">' +
+          '<input type="checkbox" class="mcheck"' + (m.done ? " checked" : "") + '>' +
+          '<span class="mtitle">' + esc(m.title) + '</span>' +
+          (m.date ? '<span class="mdate num">' + fmtShort(m.date) + '</span>' : '') + '</li>';
+      }).join("");
+      var box = document.createElement("div"); box.className = "proj"; box.setAttribute("data-pid", p.id);
+      box.innerHTML =
+        '<div class="ptop"><div class="pname">' + esc(p.name) + '</div>' +
+          '<button class="del" title="Remove project">×</button></div>' +
+        '<div class="pmeta">' +
+          '<span class="pill ' + st.pill + '">' + st.label + '</span>' +
+          '<span class="who-chip"><span class="avatar" style="width:20px;height:20px;font-size:9px;background:' + colorFor(lead) + '">' + esc(initials(lead)) + '</span>' + esc(lead) + '</span>' +
+          '<span class="chip">' + PRIO[p.prio] + ' priority</span>' +
+          (dueTxt ? '<span class="chip">' + dueTxt + '</span>' : '') +
+          (taskCount ? '<span class="chip">' + taskCount + ' open task' + (taskCount > 1 ? "s" : "") + '</span>' : '') +
+        '</div>' +
+        (p.desc ? '<div class="pdesc">' + esc(p.desc) + '</div>' : '') +
+        '<div style="display:flex; align-items:center; gap:10px;">' +
+          '<div class="bar" style="flex:1;"><span class="' + progClass(prog) + '" style="width:' + prog + '%"></span></div>' +
+          '<input type="number" class="p-prog-edit num" value="' + prog + '" min="0" max="100" style="width:62px; padding:5px 7px; font-size:12px; text-align:center;"></div>' +
+        (miles ? '<ul class="miles">' + miles + '</ul>' : '');
+      // events
+      box.querySelector(".del").addEventListener("click", function () {
+        if (!confirm("Remove project \"" + p.name + "\"? Its tasks will stay but become unlinked.")) return;
+        projects = projects.filter(function (x) { return x.id !== p.id; });
+        tasks.forEach(function (t) { if (t.projectId === p.id) t.projectId = ""; });
+        saveAll(); renderAll(); toast("Project removed");
+      });
+      box.querySelector(".p-prog-edit").addEventListener("change", function () {
+        p.progress = Math.max(0, Math.min(100, +this.value || 0));
+        if (p.progress === 100 && p.status !== "done") p.status = "done";
+        save(LS.projects, projects); renderAll();
+      });
+      box.querySelectorAll(".mcheck").forEach(function (chk) {
+        chk.addEventListener("change", function () {
+          var mid = this.closest(".mile").getAttribute("data-mid");
+          (p.milestones || []).forEach(function (m) { if (m.id === mid) m.done = chk.checked; });
+          save(LS.projects, projects); renderProjects(); renderUpcoming(); renderStats();
+        });
+      });
+      el.appendChild(box);
+    });
+  }
+  $("p-add").addEventListener("click", function () {
+    var name = $("p-name").value.trim();
+    if (!name) { toast("Give the project a name"); return; }
+    projects.push({ id: uid(), name: name, desc: $("p-desc").value.trim(), lead: $("p-lead").value,
+      status: $("p-status").value, prio: $("p-prio").value, start: $("p-start").value, due: $("p-due").value,
+      progress: Math.max(0, Math.min(100, +$("p-prog").value || 0)), milestones: [] });
+    ["p-name", "p-desc", "p-start", "p-due"].forEach(function (id) { $(id).value = ""; }); $("p-prog").value = 0;
+    save(LS.projects, projects); renderAll(); toast("Project added");
+  });
+
+  /* ================= TASKS ================= */
+  function currentFilteredTasks() {
+    var fa = $("f-assignee").value, fp = $("f-project").value, fs = $("f-status").value, sort = $("f-sort").value;
+    var list = tasks.filter(function (t) {
+      return (!fa || t.who === fa) && (!fp || t.projectId === fp) && (!fs || t.status === fs);
+    });
+    var prioRank = { high: 0, med: 1, low: 2 };
+    list.sort(function (a, b) {
+      if (sort === "prio") return (prioRank[a.prio] || 1) - (prioRank[b.prio] || 1);
+      if (sort === "assignee") return memberName(a.who).localeCompare(memberName(b.who));
+      var da = daysUntil(a.due), db = daysUntil(b.due);
+      if (da === null) return 1; if (db === null) return -1; return da - db;
+    });
+    return list;
+  }
+  function renderTasks() {
+    var el = $("task-list");
+    var list = currentFilteredTasks();
+    if (!tasks.length) { el.innerHTML = '<div class="empty">No tasks yet — assign your first below.</div>'; return; }
+    if (!list.length) { el.innerHTML = '<div class="empty">No tasks match these filters.</div>'; return; }
+    el.innerHTML = "";
+    list.forEach(function (t) {
+      var st = taskStatus(t.status);
+      var who = memberName(t.who);
+      var proj = projectName(t.projectId);
+      var due = daysUntil(t.due);
+      var dueTxt = t.due ? (t.status !== "done" && due < 0 ? '<span class="pill crit">' + Math.abs(due) + 'd overdue</span>' : '<span class="chip">' + (due === 0 ? "due today" : "due " + fmtShort(t.due)) + '</span>') : "";
+      var opts = TASK_STATUS.map(function (s) { return '<option value="' + s.v + '"' + (t.status === s.v ? " selected" : "") + '>' + s.label + '</option>'; }).join("");
+      var box = document.createElement("div"); box.className = "task";
+      box.innerHTML =
+        '<div class="tl2"><span class="who-chip"><span class="avatar" style="background:' + colorFor(who) + '">' + esc(initials(who)) + '</span>' + esc(who) + '</span>' +
+          (proj ? '<span class="chip">' + esc(proj) + '</span>' : '') + '</div>' +
+        '<div class="tt">' + esc(t.title) + '</div>' +
+        (t.note ? '<div class="hint">' + esc(t.note) + '</div>' : '') +
+        '<div class="foot"><span style="display:inline-flex; align-items:center; gap:8px;">' +
+          '<span class="prio-dot prio-' + t.prio + '" title="' + PRIO[t.prio] + ' priority"></span>' +
+          '<select class="status-sel">' + opts + '</select></span>' +
+          '<span style="display:inline-flex; align-items:center; gap:8px;">' + dueTxt +
+          '<button class="del" title="Remove">×</button></span></div>';
+      box.querySelector(".status-sel").addEventListener("change", function () {
+        t.status = this.value; save(LS.tasks, tasks); renderAll();
+      });
+      box.querySelector(".del").addEventListener("click", function () {
+        tasks = tasks.filter(function (x) { return x.id !== t.id; }); save(LS.tasks, tasks); renderAll();
+      });
+      el.appendChild(box);
+    });
+  }
+  ["f-assignee", "f-project", "f-status", "f-sort"].forEach(function (id) { $(id).addEventListener("change", renderTasks); });
+  $("t-add").addEventListener("click", function () {
+    var title = $("t-title").value.trim();
+    if (!title) { toast("Give the task a name"); return; }
+    tasks.push({ id: uid(), title: title, who: $("t-who").value, projectId: $("t-proj").value,
+      status: $("t-status").value, prio: $("t-prio").value, due: $("t-due").value, note: $("t-note").value.trim() });
+    ["t-title", "t-due", "t-note"].forEach(function (id) { $(id).value = ""; });
+    save(LS.tasks, tasks); renderAll();
+    toast($("t-who").value ? "Task assigned to " + memberName($("t-who").value) : "Task added");
+  });
+
+  /* ================= TEAM ================= */
+  var AVAIL = { free: { label: "Available", pill: "good" }, busy: { label: "At capacity", pill: "warn" }, leave: { label: "On leave", pill: "hold" } };
+  function renderTeam() {
+    var el = $("team-list");
+    if (!team.length) { el.innerHTML = '<div class="empty">No team members yet — add your first below.</div>'; return; }
+    el.innerHTML = "";
+    team.forEach(function (m) {
+      var av = AVAIL[m.avail] || AVAIL.free;
+      var active = activeTasks().filter(function (t) { return t.who === m.id; }).length;
+      var leads = projects.filter(function (p) { return p.lead === m.id && p.status !== "done"; }).length;
+      var box = document.createElement("div"); box.className = "member";
+      box.innerHTML =
+        '<span class="mstat pill ' + av.pill + '">' + av.label + '</span>' +
+        '<div class="mtop"><span class="avatar lg" style="background:' + colorFor(m.name) + '">' + esc(initials(m.name)) + '</span>' +
+          '<div><div class="mname">' + esc(m.name) + '</div><div class="mrole">' + esc(m.role || "") + '</div></div></div>' +
+        (m.email ? '<div class="hint" style="margin-top:10px;"><a href="mailto:' + esc(m.email) + '">' + esc(m.email) + '</a></div>' : '') +
+        ((m.focus && m.focus.length) ? '<div class="mfocus">' + m.focus.map(function (f) { return '<span class="chip">' + esc(f) + '</span>'; }).join("") + '</div>' : '') +
+        '<div class="mfoot"><span><strong class="num">' + active + '</strong> active task' + (active === 1 ? "" : "s") +
+          (leads ? ' · leads <strong class="num">' + leads + '</strong>' : '') + '</span>' +
+          '<button class="del" title="Remove">×</button></div>';
+      box.querySelector(".del").addEventListener("click", function () {
+        if (!confirm("Remove " + m.name + "? Their tasks will become unassigned.")) return;
+        team = team.filter(function (x) { return x.id !== m.id; });
+        tasks.forEach(function (t) { if (t.who === m.id) t.who = ""; });
+        projects.forEach(function (p) { if (p.lead === m.id) p.lead = ""; });
+        objectives.forEach(function (o) { if (o.owner === m.id) o.owner = ""; });
+        saveAll(); renderAll(); toast("Member removed");
+      });
+      el.appendChild(box);
+    });
+  }
+  $("m-add").addEventListener("click", function () {
+    var name = $("m-name").value.trim();
+    if (!name) { toast("Enter a name"); return; }
+    var focus = $("m-focus").value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    team.push({ id: uid(), name: name, role: $("m-role").value.trim(), email: $("m-email").value.trim(), focus: focus, avail: $("m-avail").value });
+    ["m-name", "m-role", "m-email", "m-focus"].forEach(function (id) { $(id).value = ""; });
+    save(LS.team, team); renderAll(); toast("Added " + name);
+  });
+
+  /* ================= OBJECTIVES / DEPT PLAN ================= */
+  function renderObjectives() {
+    var el = $("obj-list");
+    if (!objectives.length) { el.innerHTML = '<div class="empty">No objectives yet — add your first below.</div>'; return; }
+    el.innerHTML = "";
+    objectives.forEach(function (o) {
+      var prog = objProgress(o);
+      var owner = memberName(o.owner);
+      var box = document.createElement("div"); box.className = "obj";
+      var krsHtml = (o.krs || []).map(function (k) {
+        var kp = krProgress(k);
+        var cur = k.unit === "$" ? "$" + k.current : (k.unit === "%" ? k.current + "%" : k.current);
+        var tgt = k.unit === "$" ? "$" + k.target : (k.unit === "%" ? k.target + "%" : k.target);
+        return '<div class="kr" data-kid="' + k.id + '"><div class="krtop"><span class="krlab">' + esc(k.label) + '</span>' +
+          '<span class="krval num">' + '<input type="number" class="kr-cur num" value="' + k.current + '" style="width:74px; padding:3px 6px; font-size:12px; text-align:right;"> / ' + esc(tgt) + '</span></div>' +
+          '<div class="bar"><span class="' + progClass(kp) + '" style="width:' + kp + '%"></span></div></div>';
+      }).join("");
+      box.innerHTML =
+        '<div class="otop"><div><div class="otitle">' + esc(o.title) + '</div></div>' +
+          '<button class="del" title="Remove objective">×</button></div>' +
+        '<div style="display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px;">' +
+          (o.quarter ? '<span class="chip">' + esc(o.quarter) + '</span>' : '') +
+          '<span class="who-chip"><span class="avatar" style="width:20px;height:20px;font-size:9px;background:' + colorFor(owner) + '">' + esc(initials(owner)) + '</span>' + esc(owner) + '</span>' +
+          '<span class="pill ' + (prog >= 70 ? "good" : prog >= 40 ? "warn" : "crit") + '">' + prog + '% to goal</span></div>' +
+        (o.desc ? '<div class="odesc">' + esc(o.desc) + '</div>' : '') +
+        '<div class="section-title" style="margin-top:12px;">Key results</div>' + (krsHtml || '<div class="hint">No key results.</div>');
+      box.querySelector(".del").addEventListener("click", function () {
+        objectives = objectives.filter(function (x) { return x.id !== o.id; });
+        save(LS.objectives, objectives); renderObjectives(); renderStats(); toast("Objective removed");
+      });
+      box.querySelectorAll(".kr-cur").forEach(function (inp) {
+        inp.addEventListener("change", function () {
+          var kid = this.closest(".kr").getAttribute("data-kid");
+          (o.krs || []).forEach(function (k) { if (k.id === kid) k.current = +inp.value || 0; });
+          save(LS.objectives, objectives); renderObjectives();
+        });
+      });
+      el.appendChild(box);
+    });
+  }
+  // KR builder in the adder
+  var draftKrs = [];
+  function renderDraftKrs() {
+    $("o-krs").innerHTML = draftKrs.map(function (k, i) {
+      return '<div class="fgrid-3" style="margin-bottom:8px; align-items:end;">' +
+        '<input type="text" data-i="' + i + '" data-f="label" placeholder="Key result" value="' + esc(k.label) + '">' +
+        '<input type="number" data-i="' + i + '" data-f="current" placeholder="Now" value="' + k.current + '">' +
+        '<div style="display:flex; gap:6px;"><input type="number" data-i="' + i + '" data-f="target" placeholder="Target" value="' + k.target + '">' +
+        '<button class="del kr-del" data-i="' + i + '" type="button" title="Remove">×</button></div></div>';
+    }).join("");
+    $("o-krs").querySelectorAll("input").forEach(function (inp) {
+      inp.addEventListener("input", function () {
+        var i = +this.getAttribute("data-i"), f = this.getAttribute("data-f");
+        draftKrs[i][f] = f === "label" ? this.value : (+this.value || 0);
+      });
+    });
+    $("o-krs").querySelectorAll(".kr-del").forEach(function (b) {
+      b.addEventListener("click", function () { draftKrs.splice(+this.getAttribute("data-i"), 1); renderDraftKrs(); });
+    });
+  }
+  $("o-add-kr").addEventListener("click", function () { draftKrs.push({ label: "", current: 0, target: 0 }); renderDraftKrs(); });
+  $("o-add").addEventListener("click", function () {
+    var title = $("o-title").value.trim();
+    if (!title) { toast("Give the objective a name"); return; }
+    var krs = draftKrs.filter(function (k) { return k.label.trim(); }).map(function (k) {
+      return { id: uid(), label: k.label.trim(), current: +k.current || 0, target: +k.target || 0, unit: "" };
+    });
+    objectives.push({ id: uid(), title: title, desc: $("o-desc").value.trim(), owner: $("o-owner").value, quarter: $("o-quarter").value.trim(), krs: krs });
+    $("o-title").value = ""; $("o-desc").value = ""; $("o-quarter").value = ""; draftKrs = []; renderDraftKrs();
+    save(LS.objectives, objectives); renderAll(); toast("Objective added");
+  });
+
+  /* ================= BOARD REPORT ================= */
+  function buildReportModel() {
+    var activeProjects = projects.filter(function (p) { return p.status !== "done"; });
+    var doneProjects = projects.filter(function (p) { return p.status === "done"; });
+    var atRisk = projects.filter(function (p) { return p.status === "risk" || p.status === "late"; });
+    var onTrack = projects.filter(function (p) { return p.status === "track"; });
+    var doneTasks = tasks.filter(function (t) { return t.status === "done"; });
+    var blocked = tasks.filter(function (t) { return t.status === "block"; });
+    var overdue = tasks.filter(function (t) { return t.status !== "done" && daysUntil(t.due) !== null && daysUntil(t.due) < 0; });
+    var doneMiles = []; projects.forEach(function (p) { (p.milestones || []).forEach(function (m) { if (m.done) doneMiles.push({ title: m.title, proj: p.name }); }); });
+    var upcomingMiles = [];
+    projects.forEach(function (p) { (p.milestones || []).forEach(function (m) { if (!m.done && m.date) { var du = daysUntil(m.date); if (du !== null && du >= 0 && du <= 45) upcomingMiles.push({ title: m.title, proj: p.name, date: m.date, du: du }); } }); });
+    upcomingMiles.sort(function (a, b) { return a.du - b.du; });
+    return {
+      activeProjects: activeProjects, doneProjects: doneProjects, atRisk: atRisk, onTrack: onTrack,
+      doneTasks: doneTasks, blocked: blocked, overdue: overdue, doneMiles: doneMiles, upcomingMiles: upcomingMiles
+    };
+  }
+
+  function execSummary(m) {
+    var parts = [];
+    var totalActive = m.activeProjects.length;
+    var s1 = "The marketing team is running " + totalActive + " active project" + (totalActive === 1 ? "" : "s") +
+      " with a team of " + team.length + ". ";
+    if (m.onTrack.length) s1 += m.onTrack.length + " " + (m.onTrack.length === 1 ? "is" : "are") + " on track";
+    if (m.atRisk.length) s1 += (m.onTrack.length ? ", and " : "") + m.atRisk.length + " " + (m.atRisk.length === 1 ? "needs" : "need") + " attention";
+    s1 += ". ";
+    parts.push(s1);
+
+    var delivered = m.doneTasks.length, milesDone = m.doneMiles.length;
+    if (delivered || milesDone) {
+      parts.push("This period the team completed " + delivered + " task" + (delivered === 1 ? "" : "s") +
+        (milesDone ? " and reached " + milesDone + " milestone" + (milesDone === 1 ? "" : "s") : "") +
+        (m.doneProjects.length ? ", including " + m.doneProjects.length + " project" + (m.doneProjects.length === 1 ? "" : "s") + " brought to completion" : "") + ".");
+    }
+
+    // objectives
+    if (objectives.length) {
+      var avg = Math.round(objectives.reduce(function (a, o) { return a + objProgress(o); }, 0) / objectives.length);
+      parts.push("Against the department plan, the team is averaging " + avg + "% progress across " + objectives.length + " objective" + (objectives.length === 1 ? "" : "s") + ".");
+    }
+
+    // risks
+    var riskBits = [];
+    if (m.atRisk.length) riskBits.push(m.atRisk.length + " project" + (m.atRisk.length === 1 ? "" : "s") + " at risk or delayed");
+    if (m.blocked.length) riskBits.push(m.blocked.length + " blocked task" + (m.blocked.length === 1 ? "" : "s"));
+    if (m.overdue.length) riskBits.push(m.overdue.length + " overdue item" + (m.overdue.length === 1 ? "" : "s"));
+    if (riskBits.length) parts.push("Key watch-points: " + riskBits.join(", ") + ".");
+    else parts.push("There are no blocked or overdue items — delivery is healthy.");
+
+    return parts;
+  }
+
+  function statusLabelText(v) { return (PROJ_STATUS[v] || PROJ_STATUS.track).label; }
+
+  function generateReport() {
+    var m = buildReportModel();
+    var period = $("r-period").value.trim() || (new Date().toLocaleDateString(undefined, { month: "long", year: "numeric" }) + " — Board Report");
+    var author = $("r-author").value.trim();
+    save(LS.report, { period: period, author: author });
+
+    var exec = execSummary(m);
+
+    var projRows = projects.slice().sort(function (a, b) {
+      var rank = { late: 0, risk: 1, track: 2, hold: 3, done: 4 }; return (rank[a.status] || 2) - (rank[b.status] || 2);
+    }).map(function (p) {
+      var open = tasks.filter(function (t) { return t.projectId === p.id && t.status !== "done"; }).length;
+      return '<tr><td><strong>' + esc(p.name) + '</strong></td><td>' + esc(memberName(p.lead)) + '</td>' +
+        '<td>' + statusLabelText(p.status) + '</td><td class="num">' + (p.progress || 0) + '%</td>' +
+        '<td>' + (p.due ? fmtShort(p.due) : "—") + '</td><td class="num">' + open + '</td></tr>';
+    }).join("");
+
+    var objRows = objectives.map(function (o) {
+      var prog = objProgress(o);
+      var krTxt = (o.krs || []).map(function (k) { return esc(k.label) + " (" + k.current + "/" + k.target + ")"; }).join("; ");
+      return '<tr><td><strong>' + esc(o.title) + '</strong></td><td>' + esc(memberName(o.owner)) + '</td><td class="num">' + prog + '%</td><td>' + krTxt + '</td></tr>';
+    }).join("");
+
+    var achievements = [];
+    m.doneMiles.forEach(function (x) { achievements.push("Reached milestone: " + x.title + " (" + x.proj + ")"); });
+    m.doneProjects.forEach(function (p) { achievements.push("Completed project: " + p.name); });
+    m.doneTasks.slice(0, 12).forEach(function (t) { achievements.push(t.title + (projectName(t.projectId) ? " — " + projectName(t.projectId) : "")); });
+    if (!achievements.length) achievements.push("No items marked complete yet this period.");
+
+    var risks = [];
+    m.atRisk.forEach(function (p) { risks.push("<strong>" + esc(p.name) + "</strong> — " + statusLabelText(p.status).toLowerCase() + " (lead: " + esc(memberName(p.lead)) + ")"); });
+    m.blocked.forEach(function (t) { risks.push("<strong>" + esc(t.title) + "</strong> — blocked" + (t.note ? " (" + esc(t.note) + ")" : "") + ", owned by " + esc(memberName(t.who))); });
+    m.overdue.forEach(function (t) { var od = Math.abs(daysUntil(t.due)); risks.push("<strong>" + esc(t.title) + "</strong> — " + od + " day" + (od === 1 ? "" : "s") + " overdue, owned by " + esc(memberName(t.who))); });
+    if (!risks.length) risks.push("No risks, blockers or overdue items to flag.");
+
+    var upcoming = m.upcomingMiles.length
+      ? m.upcomingMiles.map(function (x) { return esc(x.title) + " — " + esc(x.proj) + " (" + fmtShort(x.date) + ", in " + x.du + " days)"; })
+      : ["No milestones scheduled in the next 45 days."];
+
+    var workloadRows = team.map(function (mem) {
+      var active = activeTasks().filter(function (t) { return t.who === mem.id; }).length;
+      var av = AVAIL[mem.avail] || AVAIL.free;
+      return '<tr><td><strong>' + esc(mem.name) + '</strong></td><td>' + esc(mem.role || "") + '</td><td>' + av.label + '</td><td class="num">' + active + '</td></tr>';
+    }).join("");
+
+    var html =
+      '<div class="report" id="report-doc">' +
+        '<h2 class="rt">Marketing Department — Board Report</h2>' +
+        '<div class="rperiod">' + esc(period) + (author ? " · Prepared by " + esc(author) : "") + " · Generated " + fmtLong(new Date()) + '</div>' +
+
+        '<h3>Executive summary</h3>' +
+        '<div class="exec">' + exec.map(function (p) { return '<p>' + p + '</p>'; }).join("") + '</div>' +
+
+        '<h3>Department objectives</h3>' +
+        (objectives.length ? '<table><thead><tr><th>Objective</th><th>Owner</th><th>Progress</th><th>Key results</th></tr></thead><tbody>' + objRows + '</tbody></table>' : '<p>No objectives recorded.</p>') +
+
+        '<h3>Project status</h3>' +
+        (projects.length ? '<table><thead><tr><th>Project</th><th>Lead</th><th>Status</th><th>Progress</th><th>Target</th><th>Open tasks</th></tr></thead><tbody>' + projRows + '</tbody></table>' : '<p>No projects recorded.</p>') +
+
+        '<h3>Key achievements this period</h3><ul>' + achievements.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join("") + '</ul>' +
+
+        '<h3>Upcoming milestones (next 45 days)</h3><ul>' + upcoming.map(function (u) { return '<li>' + u + '</li>'; }).join("") + '</ul>' +
+
+        '<h3>Team &amp; workload</h3>' +
+        '<table><thead><tr><th>Member</th><th>Role</th><th>Availability</th><th>Active tasks</th></tr></thead><tbody>' + workloadRows + '</tbody></table>' +
+
+        '<h3>Risks, blockers &amp; watch-points</h3><ul>' + risks.map(function (r) { return '<li>' + r + '</li>'; }).join("") + '</ul>' +
+
+        '<div class="rfoot">Physio Inq · Marketing Team Hub · This report was compiled automatically from live hub data.</div>' +
+      '</div>' +
+      '<div class="report-actions no-print">' +
+        '<button class="btn" id="r-print">🖨 Print / Save as PDF</button>' +
+        '<button class="btn ghost" id="r-copy">Copy as text</button>' +
+        '<button class="btn ghost" id="r-analyse">✨ Analyse &amp; polish with Claude</button>' +
+      '</div>';
+
+    $("report-out").innerHTML = html;
+    $("r-print").addEventListener("click", function () { window.print(); });
+    $("r-copy").addEventListener("click", function () { copyText(reportMarkdown(m, period, author, exec)); });
+    $("r-analyse").addEventListener("click", function () {
+      copyText(reportMarkdown(m, period, author, exec));
+      toast("Report copied — paste it into Claude to analyse & polish");
+      window.open("https://claude.ai/new", "_blank", "noopener");
+    });
+    toast("Board report generated");
+  }
+
+  function reportMarkdown(m, period, author, exec) {
+    var L = [];
+    L.push("# Marketing Department — Board Report");
+    L.push("_" + period + (author ? " · Prepared by " + author : "") + " · Generated " + fmtLong(new Date()) + "_");
+    L.push("");
+    L.push("## Executive summary");
+    exec.forEach(function (p) { L.push(p); L.push(""); });
+    L.push("## Department objectives");
+    if (objectives.length) {
+      objectives.forEach(function (o) {
+        L.push("- **" + o.title + "** (" + memberName(o.owner) + ") — " + objProgress(o) + "% to goal");
+        (o.krs || []).forEach(function (k) { L.push("  - " + k.label + ": " + k.current + " / " + k.target + " (" + krProgress(k) + "%)"); });
+      });
+    } else L.push("_None recorded._");
+    L.push("");
+    L.push("## Project status");
+    L.push("| Project | Lead | Status | Progress | Target | Open tasks |");
+    L.push("|---|---|---|---|---|---|");
+    projects.forEach(function (p) {
+      var open = tasks.filter(function (t) { return t.projectId === p.id && t.status !== "done"; }).length;
+      L.push("| " + p.name + " | " + memberName(p.lead) + " | " + statusLabelText(p.status) + " | " + (p.progress || 0) + "% | " + (p.due ? fmtShort(p.due) : "—") + " | " + open + " |");
+    });
+    L.push("");
+    L.push("## Key achievements this period");
+    m.doneMiles.forEach(function (x) { L.push("- Reached milestone: " + x.title + " (" + x.proj + ")"); });
+    m.doneProjects.forEach(function (p) { L.push("- Completed project: " + p.name); });
+    m.doneTasks.forEach(function (t) { L.push("- " + t.title + (projectName(t.projectId) ? " — " + projectName(t.projectId) : "")); });
+    if (!m.doneMiles.length && !m.doneProjects.length && !m.doneTasks.length) L.push("_Nothing marked complete yet._");
+    L.push("");
+    L.push("## Upcoming milestones (next 45 days)");
+    if (m.upcomingMiles.length) m.upcomingMiles.forEach(function (x) { L.push("- " + x.title + " — " + x.proj + " (" + fmtShort(x.date) + ", in " + x.du + " days)"); });
+    else L.push("_None scheduled._");
+    L.push("");
+    L.push("## Team & workload");
+    L.push("| Member | Role | Availability | Active tasks |");
+    L.push("|---|---|---|---|");
+    team.forEach(function (mem) {
+      var active = activeTasks().filter(function (t) { return t.who === mem.id; }).length;
+      L.push("| " + mem.name + " | " + (mem.role || "") + " | " + (AVAIL[mem.avail] || AVAIL.free).label + " | " + active + " |");
+    });
+    L.push("");
+    L.push("## Risks, blockers & watch-points");
+    m.atRisk.forEach(function (p) { L.push("- " + p.name + " — " + statusLabelText(p.status).toLowerCase() + " (lead: " + memberName(p.lead) + ")"); });
+    m.blocked.forEach(function (t) { L.push("- " + t.title + " — blocked" + (t.note ? " (" + t.note + ")" : "") + ", owned by " + memberName(t.who)); });
+    m.overdue.forEach(function (t) { var od = Math.abs(daysUntil(t.due)); L.push("- " + t.title + " — " + od + " day" + (od === 1 ? "" : "s") + " overdue, owned by " + memberName(t.who)); });
+    if (!m.atRisk.length && !m.blocked.length && !m.overdue.length) L.push("_None to flag._");
+    return L.join("\n");
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast("Report copied to clipboard"); }, function () { fallbackCopy(text); });
+    } else fallbackCopy(text);
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("Report copied to clipboard"); } catch (e) { toast("Press Ctrl+C to copy"); }
+    document.body.removeChild(ta);
+  }
+  $("r-generate").addEventListener("click", generateReport);
+  var savedReport = load(LS.report, null);
+  if (savedReport) { $("r-period").value = savedReport.period || ""; $("r-author").value = savedReport.author || ""; }
+
+  /* ================= EXPORT / IMPORT ================= */
+  $("backupBtn").addEventListener("click", function () {
+    var data = { team: team, projects: projects, tasks: tasks, objectives: objectives, savedAt: new Date().toISOString() };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "marketing-team-hub-backup.json"; a.click(); URL.revokeObjectURL(a.href);
+    toast("Backup saved to your Downloads");
+  });
+  $("restoreBtn").addEventListener("click", function () {
+    var inp = document.createElement("input"); inp.type = "file"; inp.accept = "application/json";
+    inp.addEventListener("change", function () {
+      var f = inp.files[0]; if (!f) return; var r = new FileReader();
+      r.onload = function () {
+        try {
+          var d = JSON.parse(r.result);
+          if (d.team) team = d.team; if (d.projects) projects = d.projects;
+          if (d.tasks) tasks = d.tasks; if (d.objectives) objectives = d.objectives;
+          saveAll(); renderAll(); toast("Backup restored");
+        } catch (e) { toast("Sorry — that file couldn't be read"); }
+      };
+      r.readAsText(f);
+    });
+    inp.click();
+  });
+
+  /* ================= RENDER ALL ================= */
+  function renderAll() {
+    fillMemberSelects(); fillProjectSelects();
+    renderStats();
+    renderWorkloadChart(); renderStatusChart(); renderProjHealth(); renderUpcoming(); renderAttention();
+    renderTimeline(); renderProjects(); renderTasks(); renderTeam(); renderObjectives();
+  }
+
+  /* ================= BOOT ================= */
+  (function storageBanner() {
+    var el = $("storage-status");
+    if (storageOK && !saveFailed) {
+      el.className = "ok";
+      el.innerHTML = "✓ Auto-saving on this device — the whole hub will be here when you come back. Tip: use <strong>Export</strong> now and then for a safety backup.";
+      saveAll(); // persist seed immediately
+    } else {
+      el.className = "warn";
+      el.innerHTML = "⚠️ This view can't save automatically. Use <strong>Export</strong> to save your hub to a file, then <strong>Import</strong> it next time. For automatic saving, open the downloaded <code>team-hub.html</code> from your own computer.";
+    }
+  })();
+  renderAll();
+})();
+</script>
