@@ -266,6 +266,14 @@
 
   .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-3); font-weight: 700; margin: 2px 0 10px; }
 
+  .storage-status {
+    border-radius: var(--radius-sm); padding: 10px 15px; font-size: 13px; font-weight: 600;
+    margin-bottom: 18px; display: flex; align-items: center; gap: 9px; line-height: 1.45;
+  }
+  .storage-status.ok { background: var(--good-soft); color: var(--good); }
+  .storage-status.warn { background: var(--crit-soft); color: var(--crit); }
+  .storage-status:empty { display: none; }
+
   footer.tips {
     margin-top: 26px; background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
@@ -295,11 +303,13 @@
       <a class="qbtn" href="https://outlook.office.com/calendar/view/week" target="_blank" rel="noopener">📅 Calendar</a>
       <a class="qbtn" href="https://to-do.office.com/tasks/" target="_blank" rel="noopener">✓ To Do</a>
       <a class="qbtn" href="https://teams.microsoft.com/" target="_blank" rel="noopener">💬 Teams</a>
-      <button class="icon-btn" id="backupBtn" title="Save a backup file of everything">⬇︎</button>
-      <button class="icon-btn" id="restoreBtn" title="Restore from a backup file">⬆︎</button>
+      <button class="qbtn" id="backupBtn" title="Save all your info to a file">⬇︎ Export</button>
+      <button class="qbtn" id="restoreBtn" title="Load your info back from a file">⬆︎ Import</button>
       <button class="icon-btn" id="themeBtn" title="Switch light / dark">◐</button>
     </div>
   </header>
+
+  <div id="storage-status" class="storage-status" role="status"></div>
 
   <!-- Summary -->
   <section class="stats">
@@ -410,12 +420,22 @@
   </div>
 
   <footer class="tips">
-    <h3>How to use this — and how we can make it even better</h3>
+    <h3>Keeping your information safe</h3>
     <ul>
-      <li><strong>It saves itself.</strong> Everything you type stays in this browser automatically. Bookmark this page and it'll be here tomorrow with all your lists.</li>
-      <li><strong>Back it up.</strong> Click the <strong>⬇︎</strong> button now and then to save a copy file — handy if you switch computers. The <strong>⬆︎</strong> button brings it back.</li>
-      <li><strong>The four coloured buttons up top</strong> jump straight to your real Outlook email, calendar, Microsoft To&nbsp;Do, and Teams.</li>
-      <li><strong>Next step for “live” email &amp; calendar:</strong> right now Microsoft is blocking the automatic link (a company security setting). Ask your IT team to approve the “Claude / Microsoft 365” connection and I can pull your real inbox and calendar straight into this dashboard.</li>
+      <li><strong>The green bar at the top is your saving light.</strong> Green ✓ means everything you type is being saved automatically on this device. If it ever turns red ⚠️, saving is off for that window — use Export straight away.</li>
+      <li><strong>Export / Import (top right).</strong> <strong>Export</strong> saves everything to one small file in your Downloads. <strong>Import</strong> loads it back. Do an Export every week or two as a safety net.</li>
+    </ul>
+    <h3 style="margin-top:16px;">Make saving automatic (recommended for your hub)</h3>
+    <ul>
+      <li>The most reliable way to keep your info forever is to run this from a file on your own computer:</li>
+      <li><strong>1.</strong> Save the file <code>index.html</code> that Claude sent you into a folder you'll keep (e.g. Documents).</li>
+      <li><strong>2.</strong> Double-click it — it opens in Microsoft Edge or Chrome.</li>
+      <li><strong>3.</strong> Bookmark that page. From then on it saves automatically and your info stays put, even after restarting your computer.</li>
+      <li>Keep opening it from the <em>same file in the same folder</em> — that's what lets the browser remember your data.</li>
+    </ul>
+    <h3 style="margin-top:16px;">Turning on live email &amp; calendar</h3>
+    <ul>
+      <li>The four buttons up top jump to your real Outlook email, calendar, Microsoft To&nbsp;Do, and Teams. To pull your live inbox and calendar <em>into</em> this dashboard, your IT team needs to approve the “Claude / Microsoft 365” connection (it's currently blocked by a company security policy).</li>
     </ul>
   </footer>
 </div>
@@ -436,7 +456,18 @@
     try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fallback : v; }
     catch (e) { return fallback; }
   }
-  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  var saveFailed = false;
+  function save(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); }
+    catch (e) { saveFailed = true; }
+  }
+  function storageWorks() {
+    try {
+      var k = "__la_test__"; localStorage.setItem(k, "1");
+      var ok = localStorage.getItem(k) === "1"; localStorage.removeItem(k); return ok;
+    } catch (e) { return false; }
+  }
+  var storageOK = storageWorks();
   function uid() { return Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -735,6 +766,21 @@
   }
 
   /* ---------- Boot ---------- */
+  (function renderStorageStatus() {
+    var el = $("storage-status"); if (!el) return;
+    if (storageOK && !saveFailed) {
+      el.className = "storage-status ok";
+      el.innerHTML = "✓ Auto-saving on this device — your lists will be here when you come back. " +
+        "Tip: click <strong>Export</strong> now and then for a safety backup.";
+      // Write the starter data straight away so it persists even without any clicks.
+      save(LS.todos, todos); save(LS.deadlines, deadlines); save(LS.tasks, tasks);
+    } else {
+      el.className = "storage-status warn";
+      el.innerHTML = "⚠️ This view can’t save automatically. Click <strong>Export</strong> to save your info to a file, " +
+        "then <strong>Import</strong> it next time. For automatic saving, open the downloaded file on your computer " +
+        "(see “Make saving automatic” at the bottom of this page).";
+    }
+  })();
   renderTodos(); renderDeadlines(); renderTasks(); refreshStats();
 })();
 </script>
