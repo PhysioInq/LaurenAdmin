@@ -1,0 +1,740 @@
+<title>Lauren's Admin Dashboard</title>
+<style>
+  /* ---------- Design tokens ---------- */
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f7f8;
+    --surface: #ffffff;
+    --surface-2: #eef1f3;
+    --border: #dde3e7;
+    --border-strong: #c7d0d6;
+    --ink: #16202a;
+    --ink-2: #4a5964;
+    --ink-3: #7a8892;
+    --accent: #0d7b74;
+    --accent-soft: #d8efec;
+    --accent-ink: #0a5f59;
+    --good: #17803d;
+    --good-soft: #dcf3e4;
+    --warn: #b7791f;
+    --warn-soft: #f8ecd2;
+    --crit: #c62828;
+    --crit-soft: #fadbdb;
+    --sched: #2456c9;
+    --sched-soft: #dce6fb;
+    --shadow: 0 1px 2px rgba(16,32,42,.06), 0 6px 20px rgba(16,32,42,.06);
+    --radius: 14px;
+    --radius-sm: 9px;
+    --fs-body: 15px;
+    --font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151a;
+      --surface: #1a2229;
+      --surface-2: #222c34;
+      --border: #2b363f;
+      --border-strong: #3a4750;
+      --ink: #e8edf0;
+      --ink-2: #a9b6c0;
+      --ink-3: #74838d;
+      --accent: #33b3a8;
+      --accent-soft: #10312e;
+      --accent-ink: #5fd0c5;
+      --good: #4cc072;
+      --good-soft: #102a19;
+      --warn: #e0a53a;
+      --warn-soft: #2e2510;
+      --crit: #f26d6d;
+      --crit-soft: #331414;
+      --sched: #6e9bff;
+      --sched-soft: #131f38;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f5f7f8; --surface: #ffffff; --surface-2: #eef1f3; --border: #dde3e7;
+    --border-strong: #c7d0d6; --ink: #16202a; --ink-2: #4a5964; --ink-3: #7a8892;
+    --accent: #0d7b74; --accent-soft: #d8efec; --accent-ink: #0a5f59;
+    --good: #17803d; --good-soft: #dcf3e4; --warn: #b7791f; --warn-soft: #f8ecd2;
+    --crit: #c62828; --crit-soft: #fadbdb; --sched: #2456c9; --sched-soft: #dce6fb;
+    --shadow: 0 1px 2px rgba(16,32,42,.06), 0 6px 20px rgba(16,32,42,.06);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151a; --surface: #1a2229; --surface-2: #222c34; --border: #2b363f;
+    --border-strong: #3a4750; --ink: #e8edf0; --ink-2: #a9b6c0; --ink-3: #74838d;
+    --accent: #33b3a8; --accent-soft: #10312e; --accent-ink: #5fd0c5;
+    --good: #4cc072; --good-soft: #102a19; --warn: #e0a53a; --warn-soft: #2e2510;
+    --crit: #f26d6d; --crit-soft: #331414; --sched: #6e9bff; --sched-soft: #131f38;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: var(--fs-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 22px 20px 60px; }
+  h1, h2, h3 { margin: 0; text-wrap: balance; }
+  .num { font-variant-numeric: tabular-nums; }
+  button { font-family: inherit; cursor: pointer; }
+  a { color: var(--accent-ink); }
+
+  /* ---------- Header ---------- */
+  header.top {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px;
+    justify-content: space-between; margin-bottom: 20px;
+  }
+  .greet-block { display: flex; align-items: center; gap: 14px; }
+  .brand-dot {
+    width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto;
+    background: linear-gradient(140deg, var(--accent), var(--accent-ink));
+    display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 20px;
+    box-shadow: var(--shadow);
+  }
+  .greet h1 { font-size: 22px; letter-spacing: -.2px; }
+  .greet .sub { color: var(--ink-2); font-size: 13.5px; margin-top: 2px; }
+  .header-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .qbtn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    text-decoration: none; transition: border-color .15s, transform .05s;
+  }
+  .qbtn:hover { border-color: var(--accent); }
+  .qbtn:active { transform: translateY(1px); }
+  .qbtn .ic { width: 15px; height: 15px; display: inline-block; }
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--ink-2);
+    width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+    font-size: 16px;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+
+  /* ---------- Summary strip ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .stat .n { font-size: 30px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+  .stat .l { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
+  .stat .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .stripe.a { background: var(--accent); }
+  .stripe.w { background: var(--warn); }
+  .stripe.c { background: var(--crit); }
+  .stripe.s { background: var(--sched); }
+
+  /* ---------- Grid + cards ---------- */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .card > .head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 15px 17px; border-bottom: 1px solid var(--border);
+  }
+  .card > .head h2 { font-size: 15.5px; letter-spacing: -.1px; display: flex; align-items: center; gap: 9px; }
+  .card > .head .badge {
+    font-size: 11.5px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft);
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .card .body { padding: 15px 17px; }
+  .hint { color: var(--ink-3); font-size: 12.5px; }
+
+  /* inputs */
+  input[type="text"], input[type="date"], select, textarea {
+    font-family: inherit; font-size: 14px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 9px 11px; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 120px; line-height: 1.55; }
+  .btn {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 9px 15px; font-weight: 600; font-size: 13.5px; white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-ink); }
+  .btn.ghost { background: transparent; color: var(--accent-ink); border: 1px solid var(--border-strong); }
+  .btn.ghost:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .row { display: flex; gap: 8px; }
+
+  /* ---------- To-Do ---------- */
+  ul.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .todo {
+    display: flex; align-items: flex-start; gap: 11px; padding: 11px 2px;
+    border-bottom: 1px solid var(--border);
+  }
+  .todo:last-child { border-bottom: none; }
+  .check {
+    appearance: none; -webkit-appearance: none; width: 20px; height: 20px; flex: 0 0 auto;
+    border: 2px solid var(--border-strong); border-radius: 6px; margin-top: 1px; position: relative;
+    transition: background .12s, border-color .12s;
+  }
+  .check:checked { background: var(--accent); border-color: var(--accent); }
+  .check:checked::after {
+    content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .todo .txt { flex: 1; font-size: 14.5px; }
+  .todo.done .txt { text-decoration: line-through; color: var(--ink-3); }
+  .todo .tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .2px; }
+  .del {
+    background: none; border: none; color: var(--ink-3); font-size: 17px; line-height: 1;
+    padding: 2px 6px; border-radius: 6px; opacity: .55;
+  }
+  .del:hover { color: var(--crit); opacity: 1; background: var(--crit-soft); }
+  .empty { text-align: center; color: var(--ink-3); font-size: 13px; padding: 22px 8px; }
+
+  /* ---------- Timeline ---------- */
+  .deadline {
+    display: flex; gap: 13px; padding: 12px 2px; border-bottom: 1px solid var(--border); align-items: center;
+  }
+  .deadline:last-child { border-bottom: none; }
+  .when {
+    flex: 0 0 62px; text-align: center; border-radius: var(--radius-sm); padding: 7px 4px;
+    background: var(--surface-2);
+  }
+  .when .d { font-size: 19px; font-weight: 700; line-height: 1; }
+  .when .m { font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-2); margin-top: 3px; }
+  .deadline .meta { flex: 1; min-width: 0; }
+  .deadline .meta .t { font-weight: 600; font-size: 14.5px; }
+  .deadline .meta .who { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+  .pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill.crit { color: var(--crit); background: var(--crit-soft); }
+  .pill.warn { color: var(--warn); background: var(--warn-soft); }
+  .pill.ok   { color: var(--sched); background: var(--sched-soft); }
+  .pill.good { color: var(--good); background: var(--good-soft); }
+
+  /* ---------- Delegation ---------- */
+  .task {
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 12px;
+    margin-bottom: 9px; background: var(--surface);
+  }
+  .task .tl { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .task .who-chip {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink-2);
+  }
+  .avatar {
+    width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 11px; font-weight: 700; color: #fff; flex: 0 0 auto;
+  }
+  .task .tt { font-size: 14.5px; margin: 8px 0 2px; }
+  .task .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+  .status-sel { width: auto; padding: 5px 9px; font-size: 12.5px; font-weight: 600; border-radius: 999px; }
+  .st-todo { color: var(--ink-2); }
+  .st-prog { color: var(--sched); }
+  .st-wait { color: var(--warn); }
+  .st-done { color: var(--good); }
+
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  details.adder { margin-top: 12px; }
+  details.adder > summary {
+    list-style: none; cursor: pointer; color: var(--accent-ink); font-weight: 600; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  details.adder > summary::-webkit-details-marker { display: none; }
+  details.adder[open] > summary { margin-bottom: 12px; }
+  .adder-box { background: var(--surface-2); border-radius: var(--radius-sm); padding: 13px; }
+
+  /* Email helper */
+  .tmpl-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .chip {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--ink);
+    padding: 6px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); }
+  .email-actions { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: .25s; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-3); font-weight: 700; margin: 2px 0 10px; }
+
+  footer.tips {
+    margin-top: 26px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  footer.tips h3 { font-size: 14px; margin-bottom: 10px; }
+  footer.tips ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13.5px; }
+  footer.tips li { margin-bottom: 6px; }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="greet-block">
+      <div class="brand-dot">L</div>
+      <div class="greet">
+        <h1 id="greeting">Good morning, Lauren</h1>
+        <div class="sub" id="datetime">—</div>
+      </div>
+    </div>
+    <div class="header-tools">
+      <a class="qbtn" href="https://outlook.office.com/mail/" target="_blank" rel="noopener">📧 Email</a>
+      <a class="qbtn" href="https://outlook.office.com/calendar/view/week" target="_blank" rel="noopener">📅 Calendar</a>
+      <a class="qbtn" href="https://to-do.office.com/tasks/" target="_blank" rel="noopener">✓ To Do</a>
+      <a class="qbtn" href="https://teams.microsoft.com/" target="_blank" rel="noopener">💬 Teams</a>
+      <button class="icon-btn" id="backupBtn" title="Save a backup file of everything">⬇︎</button>
+      <button class="icon-btn" id="restoreBtn" title="Restore from a backup file">⬆︎</button>
+      <button class="icon-btn" id="themeBtn" title="Switch light / dark">◐</button>
+    </div>
+  </header>
+
+  <!-- Summary -->
+  <section class="stats">
+    <div class="stat"><span class="stripe a"></span><div class="n num" id="s-todo">0</div><div class="l">To-dos left today</div></div>
+    <div class="stat"><span class="stripe c"></span><div class="n num" id="s-over">0</div><div class="l">Overdue deadlines</div></div>
+    <div class="stat"><span class="stripe w"></span><div class="n num" id="s-week">0</div><div class="l">Deadlines this week</div></div>
+    <div class="stat"><span class="stripe s"></span><div class="n num" id="s-deleg">0</div><div class="l">Tasks with the team</div></div>
+  </section>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <!-- To-Do -->
+      <div class="card">
+        <div class="head">
+          <h2>✓ Today's To-Do</h2>
+          <span class="badge" id="todo-count">0 left</span>
+        </div>
+        <div class="body">
+          <div class="row" style="margin-bottom:12px;">
+            <input type="text" id="todo-input" placeholder="Add something for today… (press Enter)">
+            <button class="btn" id="todo-add">Add</button>
+          </div>
+          <ul class="list" id="todo-list"></ul>
+          <div class="row" style="margin-top:12px; justify-content:flex-end;">
+            <button class="btn ghost" id="todo-clear">Clear finished</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email helper -->
+      <div class="card">
+        <div class="head"><h2>✍️ Email Helper</h2></div>
+        <div class="body">
+          <div class="section-title">Start from a template</div>
+          <div class="tmpl-row" id="tmpl-row"></div>
+          <div class="grid2" style="margin-bottom:10px;">
+            <div class="field" style="margin:0;">
+              <label for="mail-to">To</label>
+              <input type="text" id="mail-to" placeholder="name@physioinq.com.au">
+            </div>
+            <div class="field" style="margin:0;">
+              <label for="mail-subj">Subject</label>
+              <input type="text" id="mail-subj" placeholder="Subject line">
+            </div>
+          </div>
+          <div class="field" style="margin:0;">
+            <label for="mail-body">Message</label>
+            <textarea id="mail-body" placeholder="Pick a template above, or write your message here…"></textarea>
+          </div>
+          <div class="email-actions">
+            <button class="btn" id="mail-open">Open in Outlook</button>
+            <button class="btn ghost" id="mail-copy">Copy message</button>
+            <button class="btn ghost" id="mail-improve">Polish wording ↗</button>
+          </div>
+          <p class="hint" style="margin:10px 0 0;">“Polish wording” copies your draft and opens a chat so I can tighten the tone for you.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <!-- Timeline -->
+      <div class="card">
+        <div class="head">
+          <h2>🗓️ Deadline Timeline</h2>
+          <span class="badge" id="dl-count">0</span>
+        </div>
+        <div class="body">
+          <ul class="list" id="dl-list"></ul>
+          <details class="adder">
+            <summary>＋ Add a deadline</summary>
+            <div class="adder-box">
+              <div class="field"><label>What's due</label><input type="text" id="dl-title" placeholder="e.g. Submit monthly compliance report"></div>
+              <div class="grid2">
+                <div class="field"><label>Date</label><input type="date" id="dl-date"></div>
+                <div class="field"><label>Owner (optional)</label><input type="text" id="dl-owner" placeholder="You / team member"></div>
+              </div>
+              <button class="btn" id="dl-add">Add deadline</button>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Delegation -->
+      <div class="card">
+        <div class="head">
+          <h2>👥 Team Delegation</h2>
+          <span class="badge" id="tk-count">0 active</span>
+        </div>
+        <div class="body">
+          <div id="tk-list"></div>
+          <details class="adder">
+            <summary>＋ Delegate a task</summary>
+            <div class="adder-box">
+              <div class="field"><label>Task</label><input type="text" id="tk-title" placeholder="e.g. Prepare new-client welcome packs"></div>
+              <div class="grid2">
+                <div class="field"><label>Assign to</label><input type="text" id="tk-who" placeholder="Team member name"></div>
+                <div class="field"><label>Due (optional)</label><input type="date" id="tk-due"></div>
+              </div>
+              <div class="field"><label>Note (optional)</label><input type="text" id="tk-note" placeholder="Any detail or link"></div>
+              <button class="btn" id="tk-add">Add & assign</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="tips">
+    <h3>How to use this — and how we can make it even better</h3>
+    <ul>
+      <li><strong>It saves itself.</strong> Everything you type stays in this browser automatically. Bookmark this page and it'll be here tomorrow with all your lists.</li>
+      <li><strong>Back it up.</strong> Click the <strong>⬇︎</strong> button now and then to save a copy file — handy if you switch computers. The <strong>⬆︎</strong> button brings it back.</li>
+      <li><strong>The four coloured buttons up top</strong> jump straight to your real Outlook email, calendar, Microsoft To&nbsp;Do, and Teams.</li>
+      <li><strong>Next step for “live” email &amp; calendar:</strong> right now Microsoft is blocking the automatic link (a company security setting). Ask your IT team to approve the “Claude / Microsoft 365” connection and I can pull your real inbox and calendar straight into this dashboard.</li>
+    </ul>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var LS = {
+    todos: "la_todos_v1",
+    deadlines: "la_deadlines_v1",
+    tasks: "la_tasks_v1",
+    theme: "la_theme_v1"
+  };
+  var $ = function (id) { return document.getElementById(id); };
+  function load(k, fallback) {
+    try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fallback : v; }
+    catch (e) { return fallback; }
+  }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function uid() { return Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1900);
+  }
+
+  /* ---------- Theme ---------- */
+  var savedTheme = load(LS.theme, null);
+  if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+  $("themeBtn").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var isDark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    save(LS.theme, next);
+  });
+
+  /* ---------- Clock / greeting ---------- */
+  function refreshClock() {
+    var now = new Date();
+    var h = now.getHours();
+    var g = h < 12 ? "Good morning" : (h < 17 ? "Good afternoon" : "Good evening");
+    $("greeting").textContent = g + ", Lauren";
+    $("datetime").textContent = now.toLocaleDateString(undefined,
+      { weekday: "long", day: "numeric", month: "long", year: "numeric" }) +
+      "  ·  " + now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+  refreshClock();
+  setInterval(refreshClock, 30000);
+
+  /* ---------- Date helpers ---------- */
+  function todayMid() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  function parseDate(s) { var p = String(s).split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function daysUntil(s) {
+    return Math.round((parseDate(s) - todayMid()) / 86400000);
+  }
+  var COLORS = ["#0d7b74", "#2456c9", "#b7791f", "#9333ea", "#c62828", "#0891b2", "#65a30d"];
+  function colorFor(name) {
+    var h = 0; name = name || "?";
+    for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return COLORS[h % COLORS.length];
+  }
+  function initials(name) {
+    var parts = String(name || "?").trim().split(/\s+/);
+    return ((parts[0] || "?")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+  }
+
+  /* ================= TO-DO ================= */
+  var todos = load(LS.todos, [
+    { id: uid(), text: "Clear inbox & flag anything urgent", done: false, tag: "Email" },
+    { id: uid(), text: "Confirm today's meetings & send any agendas", done: false, tag: "Calendar" },
+    { id: uid(), text: "Review team task board — anyone stuck?", done: false, tag: "Team" }
+  ]);
+  var TAG_COLORS = {
+    Email: ["var(--sched-soft)", "var(--sched)"],
+    Calendar: ["var(--accent-soft)", "var(--accent-ink)"],
+    Team: ["var(--warn-soft)", "var(--warn)"],
+    "": ["var(--surface-2)", "var(--ink-2)"]
+  };
+  function renderTodos() {
+    var list = $("todo-list"); list.innerHTML = "";
+    if (!todos.length) { list.innerHTML = '<li class="empty">Nothing yet — add your first task above.</li>'; }
+    todos.forEach(function (t) {
+      var li = document.createElement("li");
+      li.className = "todo" + (t.done ? " done" : "");
+      var tagHtml = "";
+      if (t.tag) {
+        var c = TAG_COLORS[t.tag] || TAG_COLORS[""];
+        tagHtml = '<span class="tag" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(t.tag) + '</span>';
+      }
+      li.innerHTML =
+        '<input type="checkbox" class="check"' + (t.done ? " checked" : "") + ' aria-label="Mark done">' +
+        '<span class="txt">' + esc(t.text) + '</span>' + tagHtml +
+        '<button class="del" title="Delete" aria-label="Delete">×</button>';
+      li.querySelector(".check").addEventListener("change", function () {
+        t.done = this.checked; save(LS.todos, todos); renderTodos(); refreshStats();
+      });
+      li.querySelector(".del").addEventListener("click", function () {
+        todos = todos.filter(function (x) { return x.id !== t.id; });
+        save(LS.todos, todos); renderTodos(); refreshStats();
+      });
+      list.appendChild(li);
+    });
+    var left = todos.filter(function (t) { return !t.done; }).length;
+    $("todo-count").textContent = left + " left";
+  }
+  function addTodo() {
+    var v = $("todo-input").value.trim(); if (!v) return;
+    var tag = "";
+    if (/mail|inbox|reply|email|send/i.test(v)) tag = "Email";
+    else if (/meeting|calendar|call|schedule|book/i.test(v)) tag = "Calendar";
+    else if (/team|delegate|staff|assign/i.test(v)) tag = "Team";
+    todos.push({ id: uid(), text: v, done: false, tag: tag });
+    $("todo-input").value = ""; save(LS.todos, todos); renderTodos(); refreshStats();
+  }
+  $("todo-add").addEventListener("click", addTodo);
+  $("todo-input").addEventListener("keydown", function (e) { if (e.key === "Enter") addTodo(); });
+  $("todo-clear").addEventListener("click", function () {
+    todos = todos.filter(function (t) { return !t.done; });
+    save(LS.todos, todos); renderTodos(); refreshStats(); toast("Finished tasks cleared");
+  });
+
+  /* ================= DEADLINES ================= */
+  function plusDays(n) { var d = todayMid(); d.setDate(d.getDate() + n);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  var deadlines = load(LS.deadlines, [
+    { id: uid(), title: "Payroll cut-off — submit timesheets", date: plusDays(2), owner: "You" },
+    { id: uid(), title: "Board pack ready for review", date: plusDays(6), owner: "You" },
+    { id: uid(), title: "Quarterly compliance check", date: plusDays(12), owner: "Ops team" }
+  ]);
+  function renderDeadlines() {
+    deadlines.sort(function (a, b) { return parseDate(a.date) - parseDate(b.date); });
+    var list = $("dl-list"); list.innerHTML = "";
+    if (!deadlines.length) { list.innerHTML = '<li class="empty">No deadlines tracked yet.</li>'; }
+    deadlines.forEach(function (d) {
+      var dt = parseDate(d.date), du = daysUntil(d.date);
+      var pillCls = "ok", pillTxt;
+      if (du < 0) { pillCls = "crit"; pillTxt = Math.abs(du) + "d overdue"; }
+      else if (du === 0) { pillCls = "crit"; pillTxt = "Today"; }
+      else if (du === 1) { pillCls = "warn"; pillTxt = "Tomorrow"; }
+      else if (du <= 7) { pillCls = "warn"; pillTxt = "in " + du + " days"; }
+      else { pillCls = "ok"; pillTxt = "in " + du + " days"; }
+      var li = document.createElement("li"); li.className = "deadline";
+      li.innerHTML =
+        '<div class="when"><div class="d num">' + dt.getDate() + '</div><div class="m">' +
+          dt.toLocaleDateString(undefined, { month: "short" }) + '</div></div>' +
+        '<div class="meta"><div class="t">' + esc(d.title) + '</div>' +
+          (d.owner ? '<div class="who">👤 ' + esc(d.owner) + '</div>' : '') + '</div>' +
+        '<span class="pill ' + pillCls + '">' + pillTxt + '</span>' +
+        '<button class="del" title="Delete" aria-label="Delete">×</button>';
+      li.querySelector(".del").addEventListener("click", function () {
+        deadlines = deadlines.filter(function (x) { return x.id !== d.id; });
+        save(LS.deadlines, deadlines); renderDeadlines(); refreshStats();
+      });
+      list.appendChild(li);
+    });
+    $("dl-count").textContent = deadlines.length;
+  }
+  $("dl-add").addEventListener("click", function () {
+    var title = $("dl-title").value.trim(), date = $("dl-date").value;
+    if (!title || !date) { toast("Add a title and a date"); return; }
+    deadlines.push({ id: uid(), title: title, date: date, owner: $("dl-owner").value.trim() });
+    $("dl-title").value = ""; $("dl-date").value = ""; $("dl-owner").value = "";
+    save(LS.deadlines, deadlines); renderDeadlines(); refreshStats(); toast("Deadline added");
+  });
+
+  /* ================= DELEGATION ================= */
+  var STATUS = [
+    { v: "todo", label: "To do", cls: "st-todo" },
+    { v: "prog", label: "In progress", cls: "st-prog" },
+    { v: "wait", label: "Waiting on them", cls: "st-wait" },
+    { v: "done", label: "Done", cls: "st-done" }
+  ];
+  var tasks = load(LS.tasks, [
+    { id: uid(), title: "Prepare new-client welcome packs", who: "Reception", due: plusDays(3), note: "Use the updated brochure", status: "prog" },
+    { id: uid(), title: "Chase outstanding invoices", who: "Accounts", due: plusDays(5), note: "", status: "wait" }
+  ]);
+  function renderTasks() {
+    var wrap = $("tk-list"); wrap.innerHTML = "";
+    if (!tasks.length) { wrap.innerHTML = '<div class="empty">No tasks delegated yet.</div>'; }
+    tasks.forEach(function (t) {
+      var col = colorFor(t.who);
+      var due = t.due ? parseDate(t.due).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "";
+      var box = document.createElement("div"); box.className = "task";
+      var opts = STATUS.map(function (s) {
+        return '<option value="' + s.v + '"' + (t.status === s.v ? " selected" : "") + '>' + s.label + '</option>';
+      }).join("");
+      var stCls = (STATUS.filter(function (s) { return s.v === t.status; })[0] || STATUS[0]).cls;
+      box.innerHTML =
+        '<div class="tl"><span class="who-chip"><span class="avatar" style="background:' + col + '">' +
+          esc(initials(t.who)) + '</span>' + esc(t.who || "Unassigned") + '</span>' +
+          (due ? '<span class="hint num">due ' + due + '</span>' : '') + '</div>' +
+        '<div class="tt">' + esc(t.title) + '</div>' +
+        (t.note ? '<div class="hint">' + esc(t.note) + '</div>' : '') +
+        '<div class="foot"><select class="status-sel ' + stCls + '">' + opts + '</select>' +
+          '<button class="del" title="Remove" aria-label="Remove">×</button></div>';
+      var sel = box.querySelector(".status-sel");
+      sel.addEventListener("change", function () {
+        t.status = this.value; save(LS.tasks, tasks); renderTasks(); refreshStats();
+      });
+      box.querySelector(".del").addEventListener("click", function () {
+        tasks = tasks.filter(function (x) { return x.id !== t.id; });
+        save(LS.tasks, tasks); renderTasks(); refreshStats();
+      });
+      wrap.appendChild(box);
+    });
+    var active = tasks.filter(function (t) { return t.status !== "done"; }).length;
+    $("tk-count").textContent = active + " active";
+  }
+  $("tk-add").addEventListener("click", function () {
+    var title = $("tk-title").value.trim(), who = $("tk-who").value.trim();
+    if (!title || !who) { toast("Add a task and who it's for"); return; }
+    tasks.push({ id: uid(), title: title, who: who, due: $("tk-due").value, note: $("tk-note").value.trim(), status: "todo" });
+    $("tk-title").value = ""; $("tk-who").value = ""; $("tk-due").value = ""; $("tk-note").value = "";
+    save(LS.tasks, tasks); renderTasks(); refreshStats(); toast("Task assigned to " + who);
+  });
+
+  /* ================= EMAIL HELPER ================= */
+  var templates = {
+    "Delegate a task": {
+      subj: "Quick one for you — [task]",
+      body: "Hi [name],\n\nWhen you get a chance, could you please take care of [task]?\n\nA few details:\n• What's needed: \n• Due by: \n• Anything to note: \n\nSing out if anything's unclear. Thanks so much!\n\nKind regards,\nLauren"
+    },
+    "Follow up / reminder": {
+      subj: "Following up — [subject]",
+      body: "Hi [name],\n\nJust following up on the below — no rush, but wanted to make sure it didn't slip through.\n\nCould you let me know where things are at when you have a moment?\n\nThanks!\nLauren"
+    },
+    "Confirm a meeting": {
+      subj: "Confirming: [meeting] on [date]",
+      body: "Hi [name],\n\nJust confirming our meeting on [date] at [time], [location / link].\n\nAgenda:\n1. \n2. \n3. \n\nLet me know if you'd like to add anything. Looking forward to it.\n\nKind regards,\nLauren"
+    },
+    "Politely decline": {
+      subj: "Re: [subject]",
+      body: "Hi [name],\n\nThank you so much for thinking of me / for the invitation.\n\nUnfortunately I'm not able to [commit / attend / take this on] at the moment. I do appreciate you reaching out, and I hope we can connect another time.\n\nWarm regards,\nLauren"
+    },
+    "Thank you": {
+      subj: "Thank you!",
+      body: "Hi [name],\n\nJust a quick note to say thank you for [reason] — it's genuinely appreciated and made a real difference.\n\nThanks again,\nLauren"
+    },
+    "Request info": {
+      subj: "Quick request — [what you need]",
+      body: "Hi [name],\n\nCould you please send through [what you need] when you have a moment? I need it for [reason], ideally by [date].\n\nThank you!\nLauren"
+    }
+  };
+  var tmplRow = $("tmpl-row"), activeChip = null;
+  Object.keys(templates).forEach(function (name) {
+    var b = document.createElement("button");
+    b.className = "chip"; b.textContent = name;
+    b.addEventListener("click", function () {
+      var t = templates[name];
+      $("mail-subj").value = t.subj; $("mail-body").value = t.body;
+      if (activeChip) activeChip.classList.remove("active");
+      b.classList.add("active"); activeChip = b;
+    });
+    tmplRow.appendChild(b);
+  });
+  $("mail-open").addEventListener("click", function () {
+    var to = encodeURIComponent($("mail-to").value.trim());
+    var su = encodeURIComponent($("mail-subj").value.trim());
+    var bo = encodeURIComponent($("mail-body").value);
+    var url = "https://outlook.office.com/mail/deeplink/compose?to=" + to + "&subject=" + su + "&body=" + bo;
+    window.open(url, "_blank", "noopener");
+  });
+  $("mail-copy").addEventListener("click", function () {
+    var text = $("mail-body").value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast("Message copied"); },
+        function () { toast("Press Ctrl+C to copy"); });
+    } else { $("mail-body").select(); toast("Press Ctrl+C to copy"); }
+  });
+  $("mail-improve").addEventListener("click", function () {
+    var text = $("mail-body").value.trim();
+    if (navigator.clipboard && text) navigator.clipboard.writeText(text);
+    toast("Draft copied — paste it into Claude to polish");
+    window.open("https://claude.ai/new", "_blank", "noopener");
+  });
+
+  /* ================= BACKUP / RESTORE ================= */
+  $("backupBtn").addEventListener("click", function () {
+    var data = { todos: todos, deadlines: deadlines, tasks: tasks, savedAt: new Date().toISOString() };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "admin-dashboard-backup.json";
+    a.click(); URL.revokeObjectURL(a.href); toast("Backup saved to your Downloads");
+  });
+  $("restoreBtn").addEventListener("click", function () {
+    var inp = document.createElement("input"); inp.type = "file"; inp.accept = "application/json";
+    inp.addEventListener("change", function () {
+      var f = inp.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var d = JSON.parse(r.result);
+          if (d.todos) { todos = d.todos; save(LS.todos, todos); }
+          if (d.deadlines) { deadlines = d.deadlines; save(LS.deadlines, deadlines); }
+          if (d.tasks) { tasks = d.tasks; save(LS.tasks, tasks); }
+          renderTodos(); renderDeadlines(); renderTasks(); refreshStats(); toast("Backup restored");
+        } catch (e) { toast("Sorry — that file couldn't be read"); }
+      };
+      r.readAsText(f);
+    });
+    inp.click();
+  });
+
+  /* ================= STATS ================= */
+  function refreshStats() {
+    $("s-todo").textContent = todos.filter(function (t) { return !t.done; }).length;
+    $("s-over").textContent = deadlines.filter(function (d) { return daysUntil(d.date) < 0; }).length;
+    $("s-week").textContent = deadlines.filter(function (d) { var u = daysUntil(d.date); return u >= 0 && u <= 7; }).length;
+    $("s-deleg").textContent = tasks.filter(function (t) { return t.status !== "done"; }).length;
+  }
+
+  /* ---------- Boot ---------- */
+  renderTodos(); renderDeadlines(); renderTasks(); refreshStats();
+})();
+</script>
