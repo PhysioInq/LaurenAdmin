@@ -1,19 +1,23 @@
 <title>Lauren's Admin Dashboard</title>
 <style>
   /* ---------- Design tokens ---------- */
+  /* Physio Inq brand: deep blue #003B5B ground, pink #D93068 accent */
   :root {
-    color-scheme: light dark;
-    --bg: #f5f7f8;
+    color-scheme: light;
+    --bg: #003b5b;
+    --bg-2: #002a41;
     --surface: #ffffff;
-    --surface-2: #eef1f3;
-    --border: #dde3e7;
-    --border-strong: #c7d0d6;
-    --ink: #16202a;
-    --ink-2: #4a5964;
-    --ink-3: #7a8892;
-    --accent: #0d7b74;
-    --accent-soft: #d8efec;
-    --accent-ink: #0a5f59;
+    --surface-2: #eef2f5;
+    --border: #dde5ea;
+    --border-strong: #c4d0d8;
+    --ink: #0e2433;
+    --ink-2: #4a5f6e;
+    --ink-3: #7f909c;
+    --accent: #d93068;
+    --accent-soft: #fbe0ea;
+    --accent-ink: #b31f50;
+    --on-bg: #ffffff;
+    --on-bg-dim: #a9c3d3;
     --good: #17803d;
     --good-soft: #dcf3e4;
     --warn: #b7791f;
@@ -22,7 +26,7 @@
     --crit-soft: #fadbdb;
     --sched: #2456c9;
     --sched-soft: #dce6fb;
-    --shadow: 0 1px 2px rgba(16,32,42,.06), 0 6px 20px rgba(16,32,42,.06);
+    --shadow: 0 1px 2px rgba(0,20,35,.10), 0 10px 30px rgba(0,20,35,.20);
     --radius: 14px;
     --radius-sm: 9px;
     --fs-body: 15px;
@@ -30,51 +34,45 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #10151a;
-      --surface: #1a2229;
-      --surface-2: #222c34;
-      --border: #2b363f;
-      --border-strong: #3a4750;
-      --ink: #e8edf0;
-      --ink-2: #a9b6c0;
-      --ink-3: #74838d;
-      --accent: #33b3a8;
-      --accent-soft: #10312e;
-      --accent-ink: #5fd0c5;
-      --good: #4cc072;
-      --good-soft: #102a19;
-      --warn: #e0a53a;
-      --warn-soft: #2e2510;
-      --crit: #f26d6d;
-      --crit-soft: #331414;
-      --sched: #6e9bff;
-      --sched-soft: #131f38;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      color-scheme: dark;
+      --bg: #04202f; --bg-2: #011622;
+      --surface: #0c3348; --surface-2: #12405a;
+      --border: #1d4b64; --border-strong: #2c5d78;
+      --ink: #e9f1f6; --ink-2: #a7c0cf; --ink-3: #6f8b9c;
+      --accent: #f0568a; --accent-soft: #3a1526; --accent-ink: #ff92b6;
+      --on-bg: #eaf3f8; --on-bg-dim: #9fb9c8;
+      --good: #4cc072; --good-soft: #0f2e1b; --warn: #e0a53a; --warn-soft: #2e2510;
+      --crit: #f26d6d; --crit-soft: #331414; --sched: #6e9bff; --sched-soft: #12203a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.5);
     }
   }
   :root[data-theme="light"] {
     color-scheme: light;
-    --bg: #f5f7f8; --surface: #ffffff; --surface-2: #eef1f3; --border: #dde3e7;
-    --border-strong: #c7d0d6; --ink: #16202a; --ink-2: #4a5964; --ink-3: #7a8892;
-    --accent: #0d7b74; --accent-soft: #d8efec; --accent-ink: #0a5f59;
+    --bg: #003b5b; --bg-2: #002a41; --surface: #ffffff; --surface-2: #eef2f5;
+    --border: #dde5ea; --border-strong: #c4d0d8; --ink: #0e2433; --ink-2: #4a5f6e; --ink-3: #7f909c;
+    --accent: #d93068; --accent-soft: #fbe0ea; --accent-ink: #b31f50;
+    --on-bg: #ffffff; --on-bg-dim: #a9c3d3;
     --good: #17803d; --good-soft: #dcf3e4; --warn: #b7791f; --warn-soft: #f8ecd2;
     --crit: #c62828; --crit-soft: #fadbdb; --sched: #2456c9; --sched-soft: #dce6fb;
-    --shadow: 0 1px 2px rgba(16,32,42,.06), 0 6px 20px rgba(16,32,42,.06);
+    --shadow: 0 1px 2px rgba(0,20,35,.10), 0 10px 30px rgba(0,20,35,.20);
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #10151a; --surface: #1a2229; --surface-2: #222c34; --border: #2b363f;
-    --border-strong: #3a4750; --ink: #e8edf0; --ink-2: #a9b6c0; --ink-3: #74838d;
-    --accent: #33b3a8; --accent-soft: #10312e; --accent-ink: #5fd0c5;
-    --good: #4cc072; --good-soft: #102a19; --warn: #e0a53a; --warn-soft: #2e2510;
-    --crit: #f26d6d; --crit-soft: #331414; --sched: #6e9bff; --sched-soft: #131f38;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --bg: #04202f; --bg-2: #011622; --surface: #0c3348; --surface-2: #12405a;
+    --border: #1d4b64; --border-strong: #2c5d78; --ink: #e9f1f6; --ink-2: #a7c0cf; --ink-3: #6f8b9c;
+    --accent: #f0568a; --accent-soft: #3a1526; --accent-ink: #ff92b6;
+    --on-bg: #eaf3f8; --on-bg-dim: #9fb9c8;
+    --good: #4cc072; --good-soft: #0f2e1b; --warn: #e0a53a; --warn-soft: #2e2510;
+    --crit: #f26d6d; --crit-soft: #331414; --sched: #6e9bff; --sched-soft: #12203a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.5);
   }
 
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--bg);
+    background: linear-gradient(160deg, var(--bg), var(--bg-2));
+    background-attachment: fixed;
+    min-height: 100vh;
     color: var(--ink);
     font-family: var(--font);
     font-size: var(--fs-body);
@@ -95,12 +93,12 @@
   .greet-block { display: flex; align-items: center; gap: 14px; }
   .brand-dot {
     width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto;
-    background: linear-gradient(140deg, var(--accent), var(--accent-ink));
+    background: linear-gradient(140deg, #d93068, #b31f50);
     display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 20px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 14px rgba(217,48,104,.45);
   }
-  .greet h1 { font-size: 22px; letter-spacing: -.2px; }
-  .greet .sub { color: var(--ink-2); font-size: 13.5px; margin-top: 2px; }
+  .greet h1 { font-size: 22px; letter-spacing: -.2px; color: var(--on-bg); }
+  .greet .sub { color: var(--on-bg-dim); font-size: 13.5px; margin-top: 2px; }
   .header-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
   .qbtn {
@@ -259,7 +257,7 @@
   .email-actions { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
   .toast {
     position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
-    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px;
+    background: var(--accent); color: #fff; padding: 10px 18px; border-radius: 999px;
     font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: .25s; z-index: 50;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
