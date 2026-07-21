@@ -272,6 +272,40 @@
   .storage-status.warn { background: var(--crit-soft); color: var(--crit); }
   .storage-status:empty { display: none; }
 
+  /* To-do add row */
+  .todo-add-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .todo-add-row #todo-input { flex: 1 1 190px; }
+  .todo-add-row #todo-due { flex: 0 0 150px; }
+  .todo .pill { margin-left: auto; }
+
+  /* Meeting agendas */
+  .mtg-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+  .mtg-tab {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--ink);
+    padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  }
+  .mtg-tab:hover { border-color: var(--accent); }
+  .mtg-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .mtg-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; flex-wrap: wrap; }
+  .mtg-meta .next { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+  .mtg-meta select { width: auto; padding: 5px 9px; font-size: 12.5px; }
+  .agenda-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+  .agenda-item:last-child { border-bottom: none; }
+  .agenda-item .txt { flex: 1; font-size: 14px; }
+  .agenda-item.covered .txt { text-decoration: line-through; color: var(--ink-3); }
+  .mtg-foot { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .link-btn { background: none; border: none; color: var(--accent-ink); font-weight: 600; font-size: 12.5px; padding: 4px 2px; }
+  .link-btn:hover { text-decoration: underline; }
+  .link-btn.danger { color: var(--crit); margin-left: auto; }
+
+  /* Post-meeting actions */
+  .btn.small { padding: 6px 11px; font-size: 12.5px; }
+  .tr-row { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 11px; margin-bottom: 8px; }
+  .tr-row .tr-text { font-size: 13.5px; margin-bottom: 8px; }
+  .tr-controls { display: flex; gap: 7px; align-items: center; }
+  .tr-controls .tr-who { flex: 1; padding: 6px 9px; font-size: 12.5px; }
+  .tr-summary { font-size: 12.5px; color: var(--ink-2); margin: 4px 0 10px; font-weight: 600; }
+
   footer.tips {
     margin-top: 26px; background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
@@ -311,7 +345,7 @@
 
   <!-- Summary -->
   <section class="stats">
-    <div class="stat"><span class="stripe a"></span><div class="n num" id="s-todo">0</div><div class="l">To-dos left today</div></div>
+    <div class="stat"><span class="stripe a"></span><div class="n num" id="s-todo">0</div><div class="l">To-dos due today</div></div>
     <div class="stat"><span class="stripe c"></span><div class="n num" id="s-over">0</div><div class="l">Overdue deadlines</div></div>
     <div class="stat"><span class="stripe w"></span><div class="n num" id="s-week">0</div><div class="l">Deadlines this week</div></div>
     <div class="stat"><span class="stripe s"></span><div class="n num" id="s-deleg">0</div><div class="l">Tasks with the team</div></div>
@@ -323,18 +357,32 @@
       <!-- To-Do -->
       <div class="card">
         <div class="head">
-          <h2>✓ Today's To-Do</h2>
+          <h2>✓ To-Do List</h2>
           <span class="badge" id="todo-count">0 left</span>
         </div>
         <div class="body">
-          <div class="row" style="margin-bottom:12px;">
-            <input type="text" id="todo-input" placeholder="Add something for today… (press Enter)">
+          <div class="todo-add-row">
+            <input type="text" id="todo-input" placeholder="Add a task… (press Enter)">
+            <input type="date" id="todo-due" aria-label="Due date (optional)" title="Due date (optional)">
             <button class="btn" id="todo-add">Add</button>
           </div>
           <ul class="list" id="todo-list"></ul>
-          <div class="row" style="margin-top:12px; justify-content:flex-end;">
+          <div class="row" style="margin-top:12px; justify-content:space-between; align-items:center; gap:10px;">
+            <span class="hint" id="todo-sub"></span>
             <button class="btn ghost" id="todo-clear">Clear finished</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Meeting agendas -->
+      <div class="card">
+        <div class="head">
+          <h2>🗒️ Meeting Agendas</h2>
+          <span class="badge" id="mtg-count">0 items</span>
+        </div>
+        <div class="body">
+          <div class="mtg-tabs" id="mtg-tabs"></div>
+          <div id="mtg-panel"></div>
         </div>
       </div>
 
@@ -414,11 +462,38 @@
           </details>
         </div>
       </div>
+
+      <!-- Post-meeting actions -->
+      <div class="card">
+        <div class="head"><h2>✅ Post-Meeting Actions</h2></div>
+        <div class="body">
+          <p class="hint" style="margin:0 0 10px;">Paste your meeting notes or a Copilot/Teams transcript, then pull out the action items.</p>
+          <textarea id="tr-input" placeholder="Paste transcript or notes here…" style="min-height:110px;"></textarea>
+          <div class="email-actions">
+            <button class="btn" id="tr-find">Find actions</button>
+            <button class="btn ghost" id="tr-file">Upload .txt / .vtt</button>
+            <button class="btn ghost" id="tr-claude">Extract with Claude ↗</button>
+          </div>
+          <div id="tr-results"></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <footer class="tips">
-    <h3>Keeping your information safe</h3>
+    <h3>Using your panels</h3>
+    <ul>
+      <li><strong>To-Do List:</strong> type a task and (optionally) pick a due date. The list sorts by what's due soonest and flags anything <em>overdue</em>, <em>today</em> or <em>this week</em>.</li>
+      <li><strong>Meeting Agendas:</strong> tap a meeting tab (Team Meeting, or your 1:1s with Jonathan, Pat, Robyn, Marty) and jot points as they come to you. Set a weekly day and it shows the next date. Press <strong>Copy agenda</strong> to drop it into an email or Teams, and tick items off as you cover them. Use <strong>＋ New</strong> for any other meeting.</li>
+      <li><strong>Post-Meeting Actions:</strong> paste your notes or a Copilot/Teams transcript (or <strong>Upload</strong> a <code>.txt</code>/<code>.vtt</code> file) and click <strong>Find actions</strong>. Add each one to your to-do list or delegate it to a team member in one click. For the smartest read, use <strong>Extract with Claude</strong>.</li>
+    </ul>
+    <h3 style="margin-top:16px;">Getting your Copilot transcript out of Teams</h3>
+    <ul>
+      <li>In Teams: open the meeting → <strong>Recap</strong> → <strong>Transcript</strong> → the <strong>⋯</strong> menu → <strong>Download</strong> and choose <code>.vtt</code> (or just open the transcript, select all the text and copy it).</li>
+      <li>Then paste it into the Post-Meeting Actions box, or use <strong>Upload .txt / .vtt</strong>.</li>
+      <li><em>Coming once IT approves the Microsoft connection:</em> I'll be able to pull the transcript straight from the meeting and write the actions for you — no downloading.</li>
+    </ul>
+    <h3 style="margin-top:16px;">Keeping your information safe</h3>
     <ul>
       <li><strong>The green bar at the top is your saving light.</strong> Green ✓ means everything you type is being saved automatically on this device. If it ever turns red ⚠️, saving is off for that window — use Export straight away.</li>
       <li><strong>Export / Import (top right).</strong> <strong>Export</strong> saves everything to one small file in your Downloads. <strong>Import</strong> loads it back. Do an Export every week or two as a safety net.</li>
@@ -447,6 +522,8 @@
     todos: "la_todos_v1",
     deadlines: "la_deadlines_v1",
     tasks: "la_tasks_v1",
+    meetings: "la_meetings_v1",
+    mtgSel: "la_mtgsel_v1",
     theme: "la_theme_v1"
   };
   var $ = function (id) { return document.getElementById(id); };
@@ -503,10 +580,24 @@
   /* ---------- Date helpers ---------- */
   function todayMid() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
   function parseDate(s) { var p = String(s).split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
-  function daysUntil(s) {
-    return Math.round((parseDate(s) - todayMid()) / 86400000);
+  function daysUntil(s) { return Math.round((parseDate(s) - todayMid()) / 86400000); }
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function plusDays(n) { var d = todayMid(); d.setDate(d.getDate() + n); return iso(d); }
+  function shortDate(s) { return parseDate(s).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); }
+  function nextWeekday(day) {
+    if (day == null || day === "") return null;
+    var d = todayMid(); d.setDate(d.getDate() + ((+day - d.getDay() + 7) % 7)); return d;
   }
-  var COLORS = ["#0d7b74", "#2456c9", "#b7791f", "#9333ea", "#c62828", "#0891b2", "#65a30d"];
+  // Returns {cls, txt} for a due date, used by to-dos and deadlines.
+  function dueInfo(s) {
+    var du = daysUntil(s);
+    if (du < 0) return { cls: "crit", txt: Math.abs(du) + "d overdue" };
+    if (du === 0) return { cls: "crit", txt: "Today" };
+    if (du === 1) return { cls: "warn", txt: "Tomorrow" };
+    if (du <= 7) return { cls: "warn", txt: shortDate(s) };
+    return { cls: "ok", txt: shortDate(s) };
+  }
+  var COLORS = ["#d93068", "#2456c9", "#0891b2", "#9333ea", "#b7791f", "#17803d", "#7a3ea6"];
   function colorFor(name) {
     var h = 0; name = name || "?";
     for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
@@ -519,9 +610,10 @@
 
   /* ================= TO-DO ================= */
   var todos = load(LS.todos, [
-    { id: uid(), text: "Clear inbox & flag anything urgent", done: false, tag: "Email" },
-    { id: uid(), text: "Confirm today's meetings & send any agendas", done: false, tag: "Calendar" },
-    { id: uid(), text: "Review team task board — anyone stuck?", done: false, tag: "Team" }
+    { id: uid(), text: "Clear inbox & flag anything urgent", done: false, tag: "Email", due: plusDays(0) },
+    { id: uid(), text: "Confirm today's meetings & send any agendas", done: false, tag: "Calendar", due: plusDays(0) },
+    { id: uid(), text: "Draft agenda for Thursday team meeting", done: false, tag: "Team", due: plusDays(2) },
+    { id: uid(), text: "Review team task board — anyone stuck?", done: false, tag: "Team", due: plusDays(4) }
   ]);
   var TAG_COLORS = {
     Email: ["var(--sched-soft)", "var(--sched)"],
@@ -529,7 +621,16 @@
     Team: ["var(--warn-soft)", "var(--warn)"],
     "": ["var(--surface-2)", "var(--ink-2)"]
   };
+  function sortTodos() {
+    todos.sort(function (a, b) {
+      if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+      var da = a.due ? parseDate(a.due).getTime() : Infinity;
+      var db = b.due ? parseDate(b.due).getTime() : Infinity;
+      return da - db;
+    });
+  }
   function renderTodos() {
+    sortTodos();
     var list = $("todo-list"); list.innerHTML = "";
     if (!todos.length) { list.innerHTML = '<li class="empty">Nothing yet — add your first task above.</li>'; }
     todos.forEach(function (t) {
@@ -540,9 +641,11 @@
         var c = TAG_COLORS[t.tag] || TAG_COLORS[""];
         tagHtml = '<span class="tag" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(t.tag) + '</span>';
       }
+      var dueHtml = "";
+      if (t.due && !t.done) { var di = dueInfo(t.due); dueHtml = '<span class="pill ' + di.cls + '">' + di.txt + '</span>'; }
       li.innerHTML =
         '<input type="checkbox" class="check"' + (t.done ? " checked" : "") + ' aria-label="Mark done">' +
-        '<span class="txt">' + esc(t.text) + '</span>' + tagHtml +
+        '<span class="txt">' + esc(t.text) + '</span>' + tagHtml + dueHtml +
         '<button class="del" title="Delete" aria-label="Delete">×</button>';
       li.querySelector(".check").addEventListener("change", function () {
         t.done = this.checked; save(LS.todos, todos); renderTodos(); refreshStats();
@@ -553,8 +656,11 @@
       });
       list.appendChild(li);
     });
-    var left = todos.filter(function (t) { return !t.done; }).length;
-    $("todo-count").textContent = left + " left";
+    var open = todos.filter(function (t) { return !t.done; });
+    $("todo-count").textContent = open.length + " left";
+    var dueToday = open.filter(function (t) { return t.due && daysUntil(t.due) <= 0; }).length;
+    var thisWeek = open.filter(function (t) { var u = t.due ? daysUntil(t.due) : null; return u !== null && u > 0 && u <= 7; }).length;
+    $("todo-sub").textContent = dueToday + " due today · " + thisWeek + " due this week";
   }
   function addTodo() {
     var v = $("todo-input").value.trim(); if (!v) return;
@@ -562,19 +668,19 @@
     if (/mail|inbox|reply|email|send/i.test(v)) tag = "Email";
     else if (/meeting|calendar|call|schedule|book/i.test(v)) tag = "Calendar";
     else if (/team|delegate|staff|assign/i.test(v)) tag = "Team";
-    todos.push({ id: uid(), text: v, done: false, tag: tag });
-    $("todo-input").value = ""; save(LS.todos, todos); renderTodos(); refreshStats();
+    todos.push({ id: uid(), text: v, done: false, tag: tag, due: $("todo-due").value || "" });
+    $("todo-input").value = ""; $("todo-due").value = "";
+    save(LS.todos, todos); renderTodos(); refreshStats();
   }
   $("todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", function (e) { if (e.key === "Enter") addTodo(); });
+  $("todo-due").addEventListener("keydown", function (e) { if (e.key === "Enter") addTodo(); });
   $("todo-clear").addEventListener("click", function () {
     todos = todos.filter(function (t) { return !t.done; });
     save(LS.todos, todos); renderTodos(); refreshStats(); toast("Finished tasks cleared");
   });
 
   /* ================= DEADLINES ================= */
-  function plusDays(n) { var d = todayMid(); d.setDate(d.getDate() + n);
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   var deadlines = load(LS.deadlines, [
     { id: uid(), title: "Payroll cut-off — submit timesheets", date: plusDays(2), owner: "You" },
     { id: uid(), title: "Board pack ready for review", date: plusDays(6), owner: "You" },
@@ -727,9 +833,187 @@
     window.open("https://claude.ai/new", "_blank", "noopener");
   });
 
+  /* ================= MEETING AGENDAS ================= */
+  var DAY_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  var meetings = load(LS.meetings, [
+    { id: uid(), name: "Team Meeting", day: 4, items: [
+      { id: uid(), text: "Wins & shout-outs from the week", done: false },
+      { id: uid(), text: "Client numbers / bookings update", done: false }
+    ] },
+    { id: uid(), name: "1:1 — Jonathan", day: null, items: [] },
+    { id: uid(), name: "1:1 — Pat", day: null, items: [] },
+    { id: uid(), name: "1:1 — Robyn", day: null, items: [] },
+    { id: uid(), name: "1:1 — Marty", day: null, items: [] }
+  ]);
+  var selMtg = load(LS.mtgSel, null);
+  function currentMtg() {
+    return meetings.filter(function (x) { return x.id === selMtg; })[0] || meetings[0] || null;
+  }
+  function renderMtgTabs() {
+    var wrap = $("mtg-tabs"); wrap.innerHTML = ""; var cur = currentMtg();
+    meetings.forEach(function (m) {
+      var b = document.createElement("button");
+      b.className = "mtg-tab" + (cur && m.id === cur.id ? " active" : "");
+      var n = m.items.filter(function (i) { return !i.done; }).length;
+      b.textContent = m.name + (n ? "  (" + n + ")" : "");
+      b.addEventListener("click", function () { selMtg = m.id; save(LS.mtgSel, selMtg); renderMeetings(); });
+      wrap.appendChild(b);
+    });
+    var add = document.createElement("button");
+    add.className = "mtg-tab"; add.textContent = "＋ New";
+    add.addEventListener("click", function () {
+      var name = prompt("Name this meeting (e.g. 1:1 — Sam, or Finance catch-up):");
+      if (!name || !name.trim()) return;
+      var m = { id: uid(), name: name.trim(), day: null, items: [] };
+      meetings.push(m); selMtg = m.id; save(LS.meetings, meetings); save(LS.mtgSel, selMtg); renderMeetings();
+    });
+    wrap.appendChild(add);
+  }
+  function renderMtgPanel() {
+    var panel = $("mtg-panel"), m = currentMtg();
+    if (!m) { panel.innerHTML = '<div class="empty">No meetings yet — add one above.</div>'; $("mtg-count").textContent = "0 items"; return; }
+    var nd = nextWeekday(m.day);
+    var nextTxt = nd ? "🗓️ Next: " + nd.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) : "No set day";
+    var dayOpts = '<option value="">No set day</option>' + DAY_FULL.map(function (d, i) {
+      return '<option value="' + i + '"' + (m.day === i ? " selected" : "") + '>Every ' + d + '</option>';
+    }).join("");
+    var itemsHtml = m.items.length ? "" : '<div class="empty">No agenda items yet — add what you want to raise.</div>';
+    m.items.forEach(function (it) {
+      itemsHtml += '<div class="agenda-item' + (it.done ? " covered" : "") + '" data-id="' + it.id + '">' +
+        '<input type="checkbox" class="check"' + (it.done ? " checked" : "") + ' aria-label="Covered">' +
+        '<span class="txt">' + esc(it.text) + '</span>' +
+        '<button class="del" title="Remove" aria-label="Remove">×</button></div>';
+    });
+    panel.innerHTML =
+      '<div class="mtg-meta"><span class="next">' + nextTxt + '</span>' +
+        '<select id="mtg-day" aria-label="Meeting day">' + dayOpts + '</select></div>' +
+      '<div class="todo-add-row"><input type="text" id="mtg-item-input" placeholder="Add an agenda point…">' +
+        '<button class="btn" id="mtg-item-add">Add</button></div>' +
+      '<div id="agenda-list">' + itemsHtml + '</div>' +
+      '<div class="mtg-foot"><button class="link-btn" id="mtg-copy">📋 Copy agenda</button>' +
+        '<button class="link-btn" id="mtg-clear">Clear covered</button>' +
+        '<button class="link-btn danger" id="mtg-del">Delete meeting</button></div>';
+    $("mtg-count").textContent = m.items.filter(function (i) { return !i.done; }).length + " items";
+
+    $("mtg-day").addEventListener("change", function () {
+      m.day = this.value === "" ? null : +this.value; save(LS.meetings, meetings); renderMeetings();
+    });
+    function addItem() {
+      var v = $("mtg-item-input").value.trim(); if (!v) return;
+      m.items.push({ id: uid(), text: v, done: false }); save(LS.meetings, meetings); renderMeetings();
+    }
+    $("mtg-item-add").addEventListener("click", addItem);
+    $("mtg-item-input").addEventListener("keydown", function (e) { if (e.key === "Enter") addItem(); });
+    Array.prototype.forEach.call(panel.querySelectorAll(".agenda-item"), function (row) {
+      var id = row.getAttribute("data-id");
+      var it = m.items.filter(function (x) { return x.id === id; })[0];
+      row.querySelector(".check").addEventListener("change", function () { it.done = this.checked; save(LS.meetings, meetings); renderMeetings(); });
+      row.querySelector(".del").addEventListener("click", function () {
+        m.items = m.items.filter(function (x) { return x.id !== id; }); save(LS.meetings, meetings); renderMeetings();
+      });
+    });
+    $("mtg-copy").addEventListener("click", function () {
+      var head = "Agenda — " + m.name + (nd ? " (" + nd.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) + ")" : "");
+      var body = m.items.map(function (i, ix) { return (ix + 1) + ". " + i.text; }).join("\n");
+      if (navigator.clipboard) navigator.clipboard.writeText(head + "\n" + (body || "(no items yet)"));
+      toast("Agenda copied — paste into an email or Teams");
+    });
+    $("mtg-clear").addEventListener("click", function () {
+      m.items = m.items.filter(function (i) { return !i.done; }); save(LS.meetings, meetings); renderMeetings(); toast("Covered items cleared");
+    });
+    $("mtg-del").addEventListener("click", function () {
+      if (!confirm('Delete "' + m.name + '" and its agenda?')) return;
+      meetings = meetings.filter(function (x) { return x.id !== m.id; });
+      selMtg = meetings[0] ? meetings[0].id : null; save(LS.meetings, meetings); save(LS.mtgSel, selMtg); renderMeetings();
+    });
+  }
+  function renderMeetings() { renderMtgTabs(); renderMtgPanel(); }
+
+  /* ================= POST-MEETING ACTIONS ================= */
+  function extractActions(text) {
+    var names = ["Jonathan", "Pat", "Robyn", "Marty", "Lauren"];
+    var cues = /\b(action|to-?do|follow[ -]?up|next step|i'?ll|we'?ll|will |need(s)? to|should|must|please|assign|owner|responsible|take care|send|prepare|chase|book|schedul|confirm|draft|review|circulate|organis|organiz|set up|create|update|share|arrange|invoice|email|call)\b/i;
+    var out = [], seen = {};
+    String(text).split(/\r?\n/).forEach(function (line) {
+      var l = line.trim();
+      if (!l || l.length < 6 || l.length > 220) return;
+      if (l.indexOf("-->") !== -1 || /^\d+$/.test(l) || /^WEBVTT/i.test(l)) return;
+      l = l.replace(/^\[?\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\]?\s*/, "");
+      l = l.replace(/^[-•*]\s*/, "");
+      var speaker = (l.match(/^([A-Z][a-zA-Z]+)(?:\s[A-Z][a-zA-Z]+)?:\s*/) || [])[1] || "";
+      l = l.replace(/^([A-Z][a-zA-Z]+(\s[A-Z][a-zA-Z]+)?):\s*/, "");
+      if (l.length < 6 || !cues.test(l)) return;
+      var key = l.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (seen[key]) return; seen[key] = 1;
+      // Owner: a teammate named in the sentence wins; otherwise the person speaking.
+      var who = "";
+      names.forEach(function (n) { if (new RegExp("\\b" + n + "\\b", "i").test(l)) who = n; });
+      if (!who && speaker) {
+        names.forEach(function (n) { if (n.toLowerCase() === speaker.toLowerCase()) who = n; });
+        if (!who && !/^(the|and|so|but|well|okay|ok|yeah|yes|no)$/i.test(speaker)) who = speaker;
+      }
+      out.push({ text: l, who: who });
+    });
+    return out.slice(0, 20);
+  }
+  function renderActionResults(items) {
+    var box = $("tr-results"); box.innerHTML = "";
+    if (!items.length) {
+      box.innerHTML = '<p class="tr-summary">No clear actions spotted. Try “Extract with Claude” for a smarter read, or add tasks by hand in the panels above.</p>';
+      return;
+    }
+    var head = document.createElement("div");
+    head.innerHTML = '<p class="tr-summary">Found ' + items.length + ' possible action' + (items.length > 1 ? "s" : "") + ' — add the ones you want:</p>';
+    box.appendChild(head);
+    items.forEach(function (a) {
+      var row = document.createElement("div"); row.className = "tr-row";
+      row.innerHTML =
+        '<div class="tr-text">' + esc(a.text) + '</div>' +
+        '<div class="tr-controls">' +
+          '<input type="text" class="tr-who" placeholder="Assign to (optional)" value="' + esc(a.who) + '">' +
+          '<button class="btn ghost small act-todo">＋ My to-do</button>' +
+          '<button class="btn small act-deleg">Delegate</button>' +
+          '<button class="del" title="Dismiss" aria-label="Dismiss">×</button>' +
+        '</div>';
+      row.querySelector(".act-todo").addEventListener("click", function () {
+        todos.push({ id: uid(), text: a.text, done: false, tag: "Team", due: "" });
+        save(LS.todos, todos); renderTodos(); refreshStats(); row.remove(); toast("Added to your to-do list");
+      });
+      row.querySelector(".act-deleg").addEventListener("click", function () {
+        var who = row.querySelector(".tr-who").value.trim() || "Unassigned";
+        tasks.push({ id: uid(), title: a.text, who: who, due: "", note: "From meeting", status: "todo" });
+        save(LS.tasks, tasks); renderTasks(); refreshStats(); row.remove(); toast("Delegated to " + who);
+      });
+      row.querySelector(".del").addEventListener("click", function () { row.remove(); });
+      box.appendChild(row);
+    });
+  }
+  $("tr-find").addEventListener("click", function () {
+    var text = $("tr-input").value.trim();
+    if (!text) { toast("Paste your notes or transcript first"); return; }
+    renderActionResults(extractActions(text));
+  });
+  $("tr-file").addEventListener("click", function () {
+    var inp = document.createElement("input"); inp.type = "file"; inp.accept = ".txt,.vtt,.srt,text/plain";
+    inp.addEventListener("change", function () {
+      var f = inp.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () { $("tr-input").value = r.result; renderActionResults(extractActions(r.result)); toast("Transcript loaded"); };
+      r.readAsText(f);
+    });
+    inp.click();
+  });
+  $("tr-claude").addEventListener("click", function () {
+    var text = $("tr-input").value.trim();
+    if (text && navigator.clipboard) navigator.clipboard.writeText(
+      "Please read this meeting transcript and list the action items as: action — owner — due date.\n\n" + text);
+    toast("Transcript copied — paste into Claude");
+    window.open("https://claude.ai/new", "_blank", "noopener");
+  });
+
   /* ================= BACKUP / RESTORE ================= */
   $("backupBtn").addEventListener("click", function () {
-    var data = { todos: todos, deadlines: deadlines, tasks: tasks, savedAt: new Date().toISOString() };
+    var data = { todos: todos, deadlines: deadlines, tasks: tasks, meetings: meetings, savedAt: new Date().toISOString() };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -747,7 +1031,8 @@
           if (d.todos) { todos = d.todos; save(LS.todos, todos); }
           if (d.deadlines) { deadlines = d.deadlines; save(LS.deadlines, deadlines); }
           if (d.tasks) { tasks = d.tasks; save(LS.tasks, tasks); }
-          renderTodos(); renderDeadlines(); renderTasks(); refreshStats(); toast("Backup restored");
+          if (d.meetings) { meetings = d.meetings; save(LS.meetings, meetings); }
+          renderTodos(); renderDeadlines(); renderTasks(); renderMeetings(); refreshStats(); toast("Backup restored");
         } catch (e) { toast("Sorry — that file couldn't be read"); }
       };
       r.readAsText(f);
@@ -757,7 +1042,7 @@
 
   /* ================= STATS ================= */
   function refreshStats() {
-    $("s-todo").textContent = todos.filter(function (t) { return !t.done; }).length;
+    $("s-todo").textContent = todos.filter(function (t) { return !t.done && t.due && daysUntil(t.due) <= 0; }).length;
     $("s-over").textContent = deadlines.filter(function (d) { return daysUntil(d.date) < 0; }).length;
     $("s-week").textContent = deadlines.filter(function (d) { var u = daysUntil(d.date); return u >= 0 && u <= 7; }).length;
     $("s-deleg").textContent = tasks.filter(function (t) { return t.status !== "done"; }).length;
@@ -771,7 +1056,7 @@
       el.innerHTML = "✓ Auto-saving on this device — your lists will be here when you come back. " +
         "Tip: click <strong>Export</strong> now and then for a safety backup.";
       // Write the starter data straight away so it persists even without any clicks.
-      save(LS.todos, todos); save(LS.deadlines, deadlines); save(LS.tasks, tasks);
+      save(LS.todos, todos); save(LS.deadlines, deadlines); save(LS.tasks, tasks); save(LS.meetings, meetings);
     } else {
       el.className = "storage-status warn";
       el.innerHTML = "⚠️ This view can’t save automatically. Click <strong>Export</strong> to save your info to a file, " +
@@ -779,6 +1064,6 @@
         "(see “Make saving automatic” at the bottom of this page).";
     }
   })();
-  renderTodos(); renderDeadlines(); renderTasks(); refreshStats();
+  renderTodos(); renderDeadlines(); renderTasks(); renderMeetings(); refreshStats();
 })();
 </script>
