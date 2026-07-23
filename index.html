@@ -196,6 +196,15 @@
   .att-del { flex: 0 0 auto; }
   .att-add { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
   .att-add .ed-link { flex: 1 1 180px; }
+  .caret { background: none; border: none; color: var(--ink-3); font-size: 12px; padding: 3px 5px; border-radius: 6px; line-height: 1; align-self: center; }
+  .caret:hover { color: var(--accent-ink); background: var(--accent-soft); }
+  .deadline .meta .t { cursor: pointer; }
+  .deadline .meta .t:hover { color: var(--accent-ink); }
+  .dl-detail { padding: 2px 2px 14px 75px; }
+  .tl-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .task .tt { cursor: pointer; }
+  .task .tt:hover { color: var(--accent-ink); }
+  .task-detail { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
   .todo .tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .2px; }
   .del {
     background: none; border: none; color: var(--ink-3); font-size: 17px; line-height: 1;
@@ -205,10 +214,9 @@
   .empty { text-align: center; color: var(--ink-3); font-size: 13px; padding: 22px 8px; }
 
   /* ---------- Timeline ---------- */
-  .deadline {
-    display: flex; gap: 13px; padding: 12px 2px; border-bottom: 1px solid var(--border); align-items: center;
-  }
-  .deadline:last-child { border-bottom: none; }
+  .deadline-wrap { border-bottom: 1px solid var(--border); }
+  .deadline-wrap:last-child { border-bottom: none; }
+  .deadline { display: flex; gap: 13px; padding: 12px 2px; align-items: center; }
   .when {
     flex: 0 0 62px; text-align: center; border-radius: var(--radius-sm); padding: 7px 4px;
     background: var(--surface-2);
@@ -728,10 +736,10 @@
       t.text = this.value; li.querySelector(".txt").textContent = this.value; save(LS.todos, todos);
     });
     d.querySelector(".ed-due").addEventListener("change", function () {
-      t.due = this.value; save(LS.todos, todos); renderTodos(); refreshStats();
+      t.due = this.value; save(LS.todos, todos); refreshStats();   // list re-sorts on collapse
     });
     d.querySelector(".ed-tag").addEventListener("change", function () {
-      t.tag = this.value; save(LS.todos, todos); renderTodos();
+      t.tag = this.value; save(LS.todos, todos);
     });
     d.querySelector(".ed-notes").addEventListener("input", function () {
       t.notes = this.value; save(LS.todos, todos);
@@ -778,6 +786,66 @@
       inp.click();
     });
   }
+
+  /* --- Shared notes-doc (attachment) helpers, reused by deadlines & delegation --- */
+  function attBlockHtml(item) {
+    var att = "";
+    (item.attachments || []).forEach(function (a, i) {
+      var label = a.kind === "link" ? (a.name || a.url) : a.name + " · " + fmtSize(a.size || 0);
+      att += '<div class="att-row"><span class="att-ic">' + (a.kind === "link" ? "🔗" : "📄") + '</span>' +
+             '<a class="att-link" data-i="' + i + '" href="#">' + esc(label) + '</a>' +
+             '<button class="del att-del" data-i="' + i + '" title="Remove" aria-label="Remove">×</button></div>';
+    });
+    return '<div class="att-list">' + (att || '<span class="hint">Nothing attached yet.</span>') + '</div>' +
+      '<div class="att-add"><input type="text" class="ed-link" placeholder="Paste a OneDrive / SharePoint / web link…">' +
+        '<button class="btn ghost small ed-link-add">Add link</button>' +
+        '<button class="btn ghost small ed-file">Attach file</button></div>';
+  }
+  function wireAtt(scope, item, persist, rerender) {
+    if (!item.attachments) item.attachments = [];
+    Array.prototype.forEach.call(scope.querySelectorAll(".att-link"), function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        var a = item.attachments[+this.getAttribute("data-i")]; if (!a) return;
+        if (a.kind === "link") {
+          var u = a.url; if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+          window.open(u, "_blank", "noopener");
+        } else {
+          var link = document.createElement("a"); link.href = a.data; link.download = a.name; link.click();
+        }
+      });
+    });
+    Array.prototype.forEach.call(scope.querySelectorAll(".att-del"), function (el) {
+      el.addEventListener("click", function () {
+        item.attachments.splice(+this.getAttribute("data-i"), 1); persist(); rerender();
+      });
+    });
+    function addLink() {
+      var inp = scope.querySelector(".ed-link"), v = inp.value.trim(); if (!v) return;
+      item.attachments.push({ kind: "link", name: v.replace(/^https?:\/\//i, "").slice(0, 70), url: v });
+      persist(); rerender(); toast("Link added");
+    }
+    scope.querySelector(".ed-link-add").addEventListener("click", addLink);
+    scope.querySelector(".ed-link").addEventListener("keydown", function (e) { if (e.key === "Enter") addLink(); });
+    scope.querySelector(".ed-file").addEventListener("click", function () {
+      var fi = document.createElement("input"); fi.type = "file";
+      fi.addEventListener("change", function () {
+        var f = fi.files[0]; if (!f) return;
+        if (f.size > MAX_FILE) { toast("That file is over 1.5 MB — please add it as a OneDrive link instead."); return; }
+        var r = new FileReader();
+        r.onload = function () {
+          saveFailed = false;
+          item.attachments.push({ kind: "file", name: f.name, type: f.type, size: f.size, data: r.result });
+          persist();
+          if (saveFailed) { item.attachments.pop(); toast("Not enough saved space for that file — add it as a link instead."); return; }
+          rerender(); toast("File attached");
+        };
+        r.readAsDataURL(f);
+      });
+      fi.click();
+    });
+  }
+
   function addTodo() {
     var v = $("todo-input").value.trim(); if (!v) return;
     var tag = "";
@@ -802,11 +870,14 @@
     { id: uid(), title: "Board pack ready for review", date: plusDays(6), owner: "You" },
     { id: uid(), title: "Quarterly compliance check", date: plusDays(12), owner: "Ops team" }
   ]);
+  var openDeadline = null;
   function renderDeadlines() {
     deadlines.sort(function (a, b) { return parseDate(a.date) - parseDate(b.date); });
     var list = $("dl-list"); list.innerHTML = "";
     if (!deadlines.length) { list.innerHTML = '<li class="empty">No deadlines tracked yet.</li>'; }
     deadlines.forEach(function (d) {
+      if (!d.attachments) d.attachments = [];
+      var isOpen = openDeadline === d.id;
       var dt = parseDate(d.date), du = daysUntil(d.date);
       var pillCls = "ok", pillTxt;
       if (du < 0) { pillCls = "crit"; pillTxt = Math.abs(du) + "d overdue"; }
@@ -814,26 +885,67 @@
       else if (du === 1) { pillCls = "warn"; pillTxt = "Tomorrow"; }
       else if (du <= 7) { pillCls = "warn"; pillTxt = "in " + du + " days"; }
       else { pillCls = "ok"; pillTxt = "in " + du + " days"; }
-      var li = document.createElement("li"); li.className = "deadline";
+      var marks = "";
+      if (d.notes && d.notes.trim()) marks += ' <span class="mark" title="Has notes">📝</span>';
+      if (d.attachments.length) marks += ' <span class="mark" title="' + d.attachments.length + ' attachment(s)">📎' + d.attachments.length + '</span>';
+      var li = document.createElement("li"); li.className = "deadline-wrap";
       li.innerHTML =
-        '<div class="when"><div class="d num">' + dt.getDate() + '</div><div class="m">' +
-          dt.toLocaleDateString(undefined, { month: "short" }) + '</div></div>' +
-        '<div class="meta"><div class="t">' + esc(d.title) + '</div>' +
-          (d.owner ? '<div class="who">👤 ' + esc(d.owner) + '</div>' : '') + '</div>' +
-        '<span class="pill ' + pillCls + '">' + pillTxt + '</span>' +
-        '<button class="del" title="Delete" aria-label="Delete">×</button>';
+        '<div class="deadline">' +
+          '<div class="when"><div class="d num">' + dt.getDate() + '</div><div class="m">' +
+            dt.toLocaleDateString(undefined, { month: "short" }) + '</div></div>' +
+          '<div class="meta"><div class="t" role="button" tabindex="0" title="Click to edit">' + esc(d.title) + marks + '</div>' +
+            (d.owner ? '<div class="who">👤 ' + esc(d.owner) + '</div>' : '') + '</div>' +
+          '<span class="pill ' + pillCls + '">' + pillTxt + '</span>' +
+          '<button class="caret" aria-label="Edit" aria-expanded="' + isOpen + '">' + (isOpen ? "▾" : "▸") + '</button>' +
+          '<button class="del" title="Delete" aria-label="Delete">×</button>' +
+        '</div>' +
+        (isOpen ? renderDlDetail(d) : "");
+      function toggle() { openDeadline = isOpen ? null : d.id; renderDeadlines(); }
+      var tEl = li.querySelector(".meta .t");
+      tEl.addEventListener("click", toggle);
+      tEl.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+      li.querySelector(".caret").addEventListener("click", toggle);
       li.querySelector(".del").addEventListener("click", function () {
+        if (openDeadline === d.id) openDeadline = null;
         deadlines = deadlines.filter(function (x) { return x.id !== d.id; });
         save(LS.deadlines, deadlines); renderDeadlines(); refreshStats();
       });
+      if (isOpen) wireDlDetail(li, d);
       list.appendChild(li);
     });
     $("dl-count").textContent = deadlines.length;
   }
+  function renderDlDetail(d) {
+    return '<div class="dl-detail">' +
+      '<div class="field"><label>What\'s due</label><input type="text" class="ed-title" value="' + esc(d.title) + '"></div>' +
+      '<div class="grid2">' +
+        '<div class="field"><label>Date</label><input type="date" class="ed-date" value="' + esc(d.date || "") + '"></div>' +
+        '<div class="field"><label>Owner</label><input type="text" class="ed-owner" value="' + esc(d.owner || "") + '"></div>' +
+      '</div>' +
+      '<div class="field"><label>Notes</label><textarea class="ed-notes" placeholder="Any detail or context…">' + esc(d.notes || "") + '</textarea></div>' +
+      '<div class="field" style="margin-bottom:8px;"><label>Notes docs</label>' + attBlockHtml(d) + '</div>' +
+      '<p class="hint" style="margin:0;">Tip: for bigger documents, paste a OneDrive/SharePoint link instead of uploading.</p>' +
+      '</div>';
+  }
+  function wireDlDetail(li, d) {
+    var box = li.querySelector(".dl-detail");
+    box.querySelector(".ed-title").addEventListener("input", function () {
+      d.title = this.value; save(LS.deadlines, deadlines);
+      var span = li.querySelector(".meta .t"); if (span && span.firstChild) span.firstChild.nodeValue = this.value;
+    });
+    box.querySelector(".ed-date").addEventListener("change", function () {
+      if (!this.value) return; d.date = this.value; save(LS.deadlines, deadlines); refreshStats();   // re-sorts on collapse
+    });
+    box.querySelector(".ed-owner").addEventListener("change", function () {
+      d.owner = this.value.trim(); save(LS.deadlines, deadlines);
+    });
+    box.querySelector(".ed-notes").addEventListener("input", function () { d.notes = this.value; save(LS.deadlines, deadlines); });
+    wireAtt(box, d, function () { save(LS.deadlines, deadlines); }, renderDeadlines);
+  }
   $("dl-add").addEventListener("click", function () {
     var title = $("dl-title").value.trim(), date = $("dl-date").value;
     if (!title || !date) { toast("Add a title and a date"); return; }
-    deadlines.push({ id: uid(), title: title, date: date, owner: $("dl-owner").value.trim() });
+    deadlines.push({ id: uid(), title: title, date: date, owner: $("dl-owner").value.trim(), notes: "", attachments: [] });
     $("dl-title").value = ""; $("dl-date").value = ""; $("dl-owner").value = "";
     save(LS.deadlines, deadlines); renderDeadlines(); refreshStats(); toast("Deadline added");
   });
@@ -849,10 +961,13 @@
     { id: uid(), title: "Prepare new-client welcome packs", who: "Reception", due: plusDays(3), note: "Use the updated brochure", status: "prog" },
     { id: uid(), title: "Chase outstanding invoices", who: "Accounts", due: plusDays(5), note: "", status: "wait" }
   ]);
+  var openTask = null;
   function renderTasks() {
     var wrap = $("tk-list"); wrap.innerHTML = "";
     if (!tasks.length) { wrap.innerHTML = '<div class="empty">No tasks delegated yet.</div>'; }
     tasks.forEach(function (t) {
+      if (!t.attachments) t.attachments = [];
+      var isOpen = openTask === t.id;
       var col = colorFor(t.who);
       var due = t.due ? parseDate(t.due).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "";
       var box = document.createElement("div"); box.className = "task";
@@ -860,31 +975,68 @@
         return '<option value="' + s.v + '"' + (t.status === s.v ? " selected" : "") + '>' + s.label + '</option>';
       }).join("");
       var stCls = (STATUS.filter(function (s) { return s.v === t.status; })[0] || STATUS[0]).cls;
+      var marks = "";
+      if (t.note && t.note.trim()) marks += '<span class="mark" title="Has a note">📝</span>';
+      if (t.attachments.length) marks += '<span class="mark" title="' + t.attachments.length + ' attachment(s)">📎' + t.attachments.length + '</span>';
       box.innerHTML =
         '<div class="tl"><span class="who-chip"><span class="avatar" style="background:' + col + '">' +
           esc(initials(t.who)) + '</span>' + esc(t.who || "Unassigned") + '</span>' +
-          (due ? '<span class="hint num">due ' + due + '</span>' : '') + '</div>' +
-        '<div class="tt">' + esc(t.title) + '</div>' +
-        (t.note ? '<div class="hint">' + esc(t.note) + '</div>' : '') +
+          '<span class="tl-right">' + (due ? '<span class="hint num">due ' + due + '</span>' : '') + marks +
+          '<button class="caret" aria-label="Edit" aria-expanded="' + isOpen + '">' + (isOpen ? "▾" : "▸") + '</button></span></div>' +
+        '<div class="tt" role="button" tabindex="0" title="Click to edit">' + esc(t.title) + '</div>' +
+        (!isOpen && t.note ? '<div class="hint">' + esc(t.note) + '</div>' : '') +
         '<div class="foot"><select class="status-sel ' + stCls + '">' + opts + '</select>' +
-          '<button class="del" title="Remove" aria-label="Remove">×</button></div>';
-      var sel = box.querySelector(".status-sel");
-      sel.addEventListener("change", function () {
+          '<button class="del" title="Remove" aria-label="Remove">×</button></div>' +
+        (isOpen ? renderTaskDetail(t) : "");
+      box.querySelector(".status-sel").addEventListener("change", function () {
         t.status = this.value; save(LS.tasks, tasks); renderTasks(); refreshStats();
       });
+      function toggle() { openTask = isOpen ? null : t.id; renderTasks(); }
+      var tt = box.querySelector(".tt");
+      tt.addEventListener("click", toggle);
+      tt.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+      box.querySelector(".caret").addEventListener("click", toggle);
       box.querySelector(".del").addEventListener("click", function () {
+        if (openTask === t.id) openTask = null;
         tasks = tasks.filter(function (x) { return x.id !== t.id; });
         save(LS.tasks, tasks); renderTasks(); refreshStats();
       });
+      if (isOpen) wireTaskDetail(box, t);
       wrap.appendChild(box);
     });
     var active = tasks.filter(function (t) { return t.status !== "done"; }).length;
     $("tk-count").textContent = active + " active";
   }
+  function renderTaskDetail(t) {
+    return '<div class="task-detail">' +
+      '<div class="field"><label>Task</label><input type="text" class="ed-title" value="' + esc(t.title) + '"></div>' +
+      '<div class="grid2">' +
+        '<div class="field"><label>Assign to</label><input type="text" class="ed-who" value="' + esc(t.who || "") + '"></div>' +
+        '<div class="field"><label>Due</label><input type="date" class="ed-due" value="' + esc(t.due || "") + '"></div>' +
+      '</div>' +
+      '<div class="field"><label>Note</label><textarea class="ed-note" placeholder="Detail, context or a link…">' + esc(t.note || "") + '</textarea></div>' +
+      '<div class="field" style="margin-bottom:8px;"><label>Notes docs</label>' + attBlockHtml(t) + '</div>' +
+      '<p class="hint" style="margin:0;">Tip: for bigger documents, paste a OneDrive/SharePoint link instead of uploading.</p>' +
+      '</div>';
+  }
+  function wireTaskDetail(box, t) {
+    var d = box.querySelector(".task-detail");
+    d.querySelector(".ed-title").addEventListener("input", function () {
+      t.title = this.value; box.querySelector(".tt").textContent = this.value; save(LS.tasks, tasks);
+    });
+    d.querySelector(".ed-who").addEventListener("change", function () {
+      t.who = this.value.trim(); save(LS.tasks, tasks);   // avatar refreshes on collapse
+    });
+    d.querySelector(".ed-due").addEventListener("change", function () {
+      t.due = this.value; save(LS.tasks, tasks);
+    });
+    d.querySelector(".ed-note").addEventListener("input", function () { t.note = this.value; save(LS.tasks, tasks); });
+    wireAtt(d, t, function () { save(LS.tasks, tasks); }, renderTasks);
+  }
   $("tk-add").addEventListener("click", function () {
     var title = $("tk-title").value.trim(), who = $("tk-who").value.trim();
     if (!title || !who) { toast("Add a task and who it's for"); return; }
-    tasks.push({ id: uid(), title: title, who: who, due: $("tk-due").value, note: $("tk-note").value.trim(), status: "todo" });
+    tasks.push({ id: uid(), title: title, who: who, due: $("tk-due").value, note: $("tk-note").value.trim(), status: "todo", attachments: [] });
     $("tk-title").value = ""; $("tk-who").value = ""; $("tk-due").value = ""; $("tk-note").value = "";
     save(LS.tasks, tasks); renderTasks(); refreshStats(); toast("Task assigned to " + who);
   });
