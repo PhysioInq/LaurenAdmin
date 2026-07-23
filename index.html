@@ -168,11 +168,9 @@
 
   /* ---------- To-Do ---------- */
   ul.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-  .todo {
-    display: flex; align-items: flex-start; gap: 11px; padding: 11px 2px;
-    border-bottom: 1px solid var(--border);
-  }
-  .todo:last-child { border-bottom: none; }
+  .todo-wrap { border-bottom: 1px solid var(--border); }
+  .todo-wrap:last-child { border-bottom: none; }
+  .todo { display: flex; align-items: flex-start; gap: 11px; padding: 11px 2px; }
   .check {
     appearance: none; -webkit-appearance: none; width: 20px; height: 20px; flex: 0 0 auto;
     border: 2px solid var(--border-strong); border-radius: 6px; margin-top: 1px; position: relative;
@@ -183,8 +181,21 @@
     content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px;
     border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
   }
-  .todo .txt { flex: 1; font-size: 14.5px; }
-  .todo.done .txt { text-decoration: line-through; color: var(--ink-3); }
+  .todo .txt { flex: 1; font-size: 14.5px; cursor: pointer; }
+  .todo .txt:hover { color: var(--accent-ink); }
+  .todo-wrap.done .txt { text-decoration: line-through; color: var(--ink-3); }
+  .todo .caret { background: none; border: none; color: var(--ink-3); font-size: 12px; padding: 3px 5px; border-radius: 6px; line-height: 1; align-self: center; }
+  .todo .caret:hover { color: var(--accent-ink); background: var(--accent-soft); }
+  .mark { font-size: 11.5px; color: var(--ink-3); align-self: center; white-space: nowrap; }
+  .todo-detail { padding: 2px 2px 16px 33px; }
+  .att-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .att-row { display: flex; align-items: center; gap: 8px; }
+  .att-ic { flex: 0 0 auto; }
+  .att-link { flex: 1; color: var(--accent-ink); text-decoration: none; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .att-link:hover { text-decoration: underline; }
+  .att-del { flex: 0 0 auto; }
+  .att-add { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .att-add .ed-link { flex: 1 1 180px; }
   .todo .tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .2px; }
   .del {
     background: none; border: none; color: var(--ink-3); font-size: 17px; line-height: 1;
@@ -276,7 +287,7 @@
   .todo-add-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .todo-add-row #todo-input { flex: 1 1 190px; }
   .todo-add-row #todo-due { flex: 0 0 150px; }
-  .todo .pill { margin-left: auto; }
+  .todo .pill { align-self: center; }
 
   /* Meeting agendas */
   .mtg-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
@@ -619,8 +630,15 @@
     Email: ["var(--sched-soft)", "var(--sched)"],
     Calendar: ["var(--accent-soft)", "var(--accent-ink)"],
     Team: ["var(--warn-soft)", "var(--warn)"],
+    Finance: ["var(--good-soft)", "var(--good)"],
+    Admin: ["var(--surface-2)", "var(--ink-2)"],
     "": ["var(--surface-2)", "var(--ink-2)"]
   };
+  var TAG_OPTIONS = ["", "Email", "Calendar", "Team", "Finance", "Admin"];
+  var MAX_FILE = 1.5 * 1024 * 1024;   // 1.5 MB per attached file
+  var openTodo = null;                 // id of the currently expanded task
+  function fmtSize(n) { return n < 1024 ? n + " B" : (n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB"); }
+
   function sortTodos() {
     todos.sort(function (a, b) {
       if (!!a.done !== !!b.done) return a.done ? 1 : -1;
@@ -634,8 +652,10 @@
     var list = $("todo-list"); list.innerHTML = "";
     if (!todos.length) { list.innerHTML = '<li class="empty">Nothing yet — add your first task above.</li>'; }
     todos.forEach(function (t) {
+      if (!t.attachments) t.attachments = [];
+      var isOpen = openTodo === t.id;
       var li = document.createElement("li");
-      li.className = "todo" + (t.done ? " done" : "");
+      li.className = "todo-wrap" + (t.done ? " done" : "");
       var tagHtml = "";
       if (t.tag) {
         var c = TAG_COLORS[t.tag] || TAG_COLORS[""];
@@ -643,24 +663,120 @@
       }
       var dueHtml = "";
       if (t.due && !t.done) { var di = dueInfo(t.due); dueHtml = '<span class="pill ' + di.cls + '">' + di.txt + '</span>'; }
+      var marks = "";
+      if (t.notes && t.notes.trim()) marks += '<span class="mark" title="Has notes">📝</span>';
+      if (t.attachments.length) marks += '<span class="mark" title="' + t.attachments.length + ' attachment(s)">📎' + t.attachments.length + '</span>';
       li.innerHTML =
-        '<input type="checkbox" class="check"' + (t.done ? " checked" : "") + ' aria-label="Mark done">' +
-        '<span class="txt">' + esc(t.text) + '</span>' + tagHtml + dueHtml +
-        '<button class="del" title="Delete" aria-label="Delete">×</button>';
+        '<div class="todo">' +
+          '<input type="checkbox" class="check"' + (t.done ? " checked" : "") + ' aria-label="Mark done">' +
+          '<span class="txt" role="button" tabindex="0" title="Click to open, edit, add notes or docs">' + esc(t.text) + '</span>' +
+          marks + tagHtml + dueHtml +
+          '<button class="caret" aria-label="Edit task" aria-expanded="' + isOpen + '">' + (isOpen ? "▾" : "▸") + '</button>' +
+          '<button class="del" title="Delete" aria-label="Delete">×</button>' +
+        '</div>' +
+        (isOpen ? renderTodoDetail(t) : "");
       li.querySelector(".check").addEventListener("change", function () {
         t.done = this.checked; save(LS.todos, todos); renderTodos(); refreshStats();
       });
+      function toggle() { openTodo = isOpen ? null : t.id; renderTodos(); }
+      var headline = li.querySelector(".txt");
+      headline.addEventListener("click", toggle);
+      headline.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+      li.querySelector(".caret").addEventListener("click", toggle);
       li.querySelector(".del").addEventListener("click", function () {
+        if (openTodo === t.id) openTodo = null;
         todos = todos.filter(function (x) { return x.id !== t.id; });
         save(LS.todos, todos); renderTodos(); refreshStats();
       });
+      if (isOpen) wireTodoDetail(li, t);
       list.appendChild(li);
     });
-    var open = todos.filter(function (t) { return !t.done; });
-    $("todo-count").textContent = open.length + " left";
-    var dueToday = open.filter(function (t) { return t.due && daysUntil(t.due) <= 0; }).length;
-    var thisWeek = open.filter(function (t) { var u = t.due ? daysUntil(t.due) : null; return u !== null && u > 0 && u <= 7; }).length;
+    var openItems = todos.filter(function (t) { return !t.done; });
+    $("todo-count").textContent = openItems.length + " left";
+    var dueToday = openItems.filter(function (t) { return t.due && daysUntil(t.due) <= 0; }).length;
+    var thisWeek = openItems.filter(function (t) { var u = t.due ? daysUntil(t.due) : null; return u !== null && u > 0 && u <= 7; }).length;
     $("todo-sub").textContent = dueToday + " due today · " + thisWeek + " due this week";
+  }
+  function renderTodoDetail(t) {
+    var opts = TAG_OPTIONS.map(function (o) {
+      return '<option value="' + o + '"' + (t.tag === o ? " selected" : "") + '>' + (o || "No label") + '</option>';
+    }).join("");
+    var att = "";
+    (t.attachments || []).forEach(function (a, i) {
+      var label = a.kind === "link" ? (a.name || a.url) : a.name + " · " + fmtSize(a.size || 0);
+      att += '<div class="att-row"><span class="att-ic">' + (a.kind === "link" ? "🔗" : "📄") + '</span>' +
+             '<a class="att-link" data-i="' + i + '" href="#">' + esc(label) + '</a>' +
+             '<button class="del att-del" data-i="' + i + '" title="Remove" aria-label="Remove">×</button></div>';
+    });
+    return '<div class="todo-detail">' +
+      '<div class="field"><label>Task</label><input type="text" class="ed-text" value="' + esc(t.text) + '"></div>' +
+      '<div class="grid2">' +
+        '<div class="field"><label>Due date</label><input type="date" class="ed-due" value="' + esc(t.due || "") + '"></div>' +
+        '<div class="field"><label>Label</label><select class="ed-tag">' + opts + '</select></div>' +
+      '</div>' +
+      '<div class="field"><label>Notes</label><textarea class="ed-notes" placeholder="Add any detail, context or next steps…">' + esc(t.notes || "") + '</textarea></div>' +
+      '<div class="field" style="margin-bottom:8px;"><label>Notes docs</label><div class="att-list">' + (att || '<span class="hint">Nothing attached yet.</span>') + '</div>' +
+        '<div class="att-add"><input type="text" class="ed-link" placeholder="Paste a OneDrive / SharePoint / web link…">' +
+          '<button class="btn ghost small ed-link-add">Add link</button>' +
+          '<button class="btn ghost small ed-file">Attach file</button></div></div>' +
+      '<p class="hint" style="margin:0;">Tip: for bigger documents, keep them in OneDrive/SharePoint and paste the link — it always saves and stays easy to share.</p>' +
+      '</div>';
+  }
+  function wireTodoDetail(li, t) {
+    var d = li.querySelector(".todo-detail");
+    d.querySelector(".ed-text").addEventListener("input", function () {
+      t.text = this.value; li.querySelector(".txt").textContent = this.value; save(LS.todos, todos);
+    });
+    d.querySelector(".ed-due").addEventListener("change", function () {
+      t.due = this.value; save(LS.todos, todos); renderTodos(); refreshStats();
+    });
+    d.querySelector(".ed-tag").addEventListener("change", function () {
+      t.tag = this.value; save(LS.todos, todos); renderTodos();
+    });
+    d.querySelector(".ed-notes").addEventListener("input", function () {
+      t.notes = this.value; save(LS.todos, todos);
+    });
+    Array.prototype.forEach.call(d.querySelectorAll(".att-link"), function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        var a = t.attachments[+this.getAttribute("data-i")]; if (!a) return;
+        if (a.kind === "link") {
+          var u = a.url; if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+          window.open(u, "_blank", "noopener");
+        } else {
+          var link = document.createElement("a"); link.href = a.data; link.download = a.name; link.click();
+        }
+      });
+    });
+    Array.prototype.forEach.call(d.querySelectorAll(".att-del"), function (el) {
+      el.addEventListener("click", function () {
+        t.attachments.splice(+this.getAttribute("data-i"), 1); save(LS.todos, todos); renderTodos();
+      });
+    });
+    function addLink() {
+      var v = d.querySelector(".ed-link").value.trim(); if (!v) return;
+      t.attachments.push({ kind: "link", name: v.replace(/^https?:\/\//i, "").slice(0, 70), url: v });
+      save(LS.todos, todos); renderTodos(); toast("Link added");
+    }
+    d.querySelector(".ed-link-add").addEventListener("click", addLink);
+    d.querySelector(".ed-link").addEventListener("keydown", function (e) { if (e.key === "Enter") addLink(); });
+    d.querySelector(".ed-file").addEventListener("click", function () {
+      var inp = document.createElement("input"); inp.type = "file";
+      inp.addEventListener("change", function () {
+        var f = inp.files[0]; if (!f) return;
+        if (f.size > MAX_FILE) { toast("That file is over 1.5 MB — please add it as a OneDrive link instead."); return; }
+        var r = new FileReader();
+        r.onload = function () {
+          saveFailed = false;
+          t.attachments.push({ kind: "file", name: f.name, type: f.type, size: f.size, data: r.result });
+          save(LS.todos, todos);
+          if (saveFailed) { t.attachments.pop(); toast("Not enough saved space for that file — add it as a link instead."); return; }
+          renderTodos(); toast("File attached");
+        };
+        r.readAsDataURL(f);
+      });
+      inp.click();
+    });
   }
   function addTodo() {
     var v = $("todo-input").value.trim(); if (!v) return;
@@ -668,7 +784,7 @@
     if (/mail|inbox|reply|email|send/i.test(v)) tag = "Email";
     else if (/meeting|calendar|call|schedule|book/i.test(v)) tag = "Calendar";
     else if (/team|delegate|staff|assign/i.test(v)) tag = "Team";
-    todos.push({ id: uid(), text: v, done: false, tag: tag, due: $("todo-due").value || "" });
+    todos.push({ id: uid(), text: v, done: false, tag: tag, due: $("todo-due").value || "", notes: "", attachments: [] });
     $("todo-input").value = ""; $("todo-due").value = "";
     save(LS.todos, todos); renderTodos(); refreshStats();
   }
