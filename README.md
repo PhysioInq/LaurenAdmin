@@ -1,6 +1,18 @@
-# Lauren's Personal Admin Dashboard
+# Lauren's Dashboards
 
-A simple, private command centre for your day — no logins, no setup, nothing technical.
+Two self-contained web pages. No logins, no setup, nothing technical — double-click
+and they open in your browser.
+
+| File | What it's for |
+|---|---|
+| `index.html` | **Personal admin** — to-dos, deadlines, delegation, email templates |
+| `deals-dashboard.html` | **Enquiry & conversion analytics** — 365 days of Physio Inq deals, cut by location, discipline, source and referrer type |
+
+---
+
+# Personal Admin Dashboard
+
+A simple, private command centre for your day.
 Open `index.html` in any web browser and it just works.
 
 ## What it does
@@ -40,3 +52,54 @@ this can be upgraded to show your live emails and appointments.
 - A weekly email that summarises the week's deadlines.
 - Recurring to-dos that reappear each day/week.
 - Sharing the delegation board with your team.
+
+---
+
+# Enquiry & Conversion Dashboard
+
+`deals-dashboard.html` — built from the HubSpot *deals by source* export
+(26 July 2025 – 25 July 2026, 15,535 enquiries). Open it in any browser; all the
+data is inside the file and nothing is sent anywhere.
+
+## What it answers
+
+- **Trends** — enquiry volume and conversion rate month by month, plus how the
+  channel mix and the type of person enquiring have shifted.
+- **Segments** — cut every metric by state, suburb, postcode, discipline,
+  relationship to the participant, funding type, delivery mode, source, campaign,
+  keyword, deal owner or month. Sortable, with a volume-vs-conversion scatter for
+  "where does the next dollar go".
+- **Cross-cut** — any two dimensions as a heat map (conversion, volume, bookings
+  or geo-blocked rate).
+- **Why we lose** — recorded loss reasons, split by channel, plus a
+  suburb/postcode list of demand we couldn't service.
+- **Paid channels** — campaign and keyword performance; load a Google Ads or
+  Microsoft Advertising campaign export and it works out cost per enquiry and
+  cost per booking per campaign.
+- **Opportunities** — plain-language cards generated from whatever is filtered,
+  ranked by how many bookings are at stake.
+- **Method** — exactly how every number is defined.
+
+## Filters
+
+One filter row scopes the whole page: period, state, discipline, source,
+relationship, funding, delivery mode, ad platform, and a free-text search across
+suburb, postcode, campaign and keyword. Every chart has a **Table** toggle, and
+**Export view (CSV)** downloads whatever is currently filtered.
+
+## Loading your own data
+
+- **Newer deals** — export the same HubSpot view (same columns) and use
+  *Load newer export*. The file is read in your browser and remembered on that
+  computer only. *Method → Go back to the original export* undoes it.
+- **Ad spend** — export **Campaigns → Cost** from Google Ads (and Microsoft
+  Advertising) as CSV and use *Google Ads data*. Campaigns are matched to
+  enquiries by campaign name, so the names in Google Ads need to match what
+  lands in HubSpot's "original source drill-down 1".
+
+## A note on the conversion rate
+
+Conversion = booked ÷ (booked + lost). Enquiries still in progress are left out.
+Losses take longer to be recorded than bookings, so the most recent few weeks
+always read high — that window is shaded on the trend chart, and the
+**Mature leads only** switch removes it.
