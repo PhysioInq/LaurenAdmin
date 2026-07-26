@@ -123,6 +123,21 @@ Two things count as unmet:
 Discipline columns count what each enquiry asked for, so an enquiry naming two
 disciplines appears under both — the columns add up to more than the total.
 
+## What ad spend can and can't tell you
+
+Spend is recorded per campaign per month, so it can be split by **time** but not by
+state, discipline or funding — a campaign has one cost however its enquiries are
+spread. Whenever one of those filters is on, the dashboard hides cost per enquiry
+and cost per booking rather than showing a figure that can't be right.
+
+Campaign names in the ad account drift from what HubSpot recorded (annotations get
+appended, campaigns get renamed). The dashboard matches on the name, then falls
+back to matching the words in common, and every pairing is listed under
+*Campaign name matching* on the Paid channels tab with its confidence — untick any
+that look wrong and the spend stops counting. MCC exports covering several accounts
+are supported: subtotal rows are ignored, and each account can be switched off if
+it books through a different funnel.
+
 ## A note on the conversion rate
 
 Conversion = booked ÷ (booked + lost). Enquiries still in progress are left out.

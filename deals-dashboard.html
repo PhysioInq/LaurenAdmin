@@ -477,6 +477,14 @@
           </div>
         </details>
         <div class="kv hidden" id="adsKv"></div>
+        <div class="frow hidden" id="adsAccounts" style="margin-top:12px"></div>
+        <details class="howto hidden" id="adsMatchWrap" style="margin-top:12px">
+          <summary><span id="adsMatchSummary">Campaign name matching</span></summary>
+          <div class="body" style="max-width:none">
+            <p id="adsMatchNote"></p>
+            <div class="tw scroll"><table id="adsMatch"></table></div>
+          </div>
+        </details>
       </div>
       <div class="card">
         <div class="ch">
@@ -663,8 +671,7 @@ var S={
   rcCap:true, rcState:"", rcLevel:"city", rcMin:2, rcSort:{k:"unmet",dir:-1},
   views:{}
 };
-var ADS=null; // {rows:[], byNorm:Map, from, to, currency}
-try{var sa=localStorage.getItem("pi_ads");if(sa)ADS=reviveAds(JSON.parse(sa))}catch(e){}
+var ADS=null; // set after the deals dataset is settled (see restoreAds below)
 
 var FILTER_DIMS=[
   {k:"state",n:"State"},{k:"disc",n:"Discipline"},{k:"src",n:"Source"},
@@ -1273,38 +1280,135 @@ function parseAds(text){
   var cImpr=find([/^impr/,/impressions/]);
   var cConv=find([/^conversions$/,/^conv\./,/^conversions/]);
   var cDate=find([/^month$/,/^week$/,/^day$/,/^date$/,/^month of year$/,/^week starting/]);
+  var cAcct=find([/^account$/,/^account name$/,/^customer$/]);
   if(!cName)throw new Error("Could not find a campaign-name column.");
   if(!cCost)throw new Error("Could not find a cost/spend column.");
   function num(v){var x=parseFloat(String(v||"").replace(/[^0-9.\-]/g,""));return isNaN(x)?0:x}
-  var out=[],seen={},dated=false;
+  var out=[],seen={},dated=false,skipped=0;
   objs.forEach(function(o){
-    var nm=o[cName];if(!nm||/^total/i.test(nm))return;
+    var nm=(o[cName]||"").trim();
+    if(!nm||nm==="--"||/^total/i.test(nm)){skipped++;return}
     var day=cDate?adsDayOf(o[cDate]):null;
     if(day!=null)dated=true;
-    var k=normCamp(nm)+"\u0001"+(day==null?"":day);
-    if(!seen[k]){seen[k]={name:nm,d:day,cost:0,clicks:0,impr:0,conv:0};out.push(seen[k])}
+    var acct=cAcct?(o[cAcct]||"").trim():"";
+    if(acct==="--")acct="";
+    var k=normCamp(nm)+"\u0001"+(day==null?"":day)+"\u0001"+acct;
+    if(!seen[k]){seen[k]={name:nm,acct:acct,d:day,cost:0,clicks:0,impr:0,conv:0};out.push(seen[k])}
     seen[k].cost+=num(o[cCost]);
     if(cClicks)seen[k].clicks+=num(o[cClicks]);
     if(cImpr)seen[k].impr+=num(o[cImpr]);
     if(cConv)seen[k].conv+=num(o[cConv]);
   });
   if(!out.length)throw new Error("No campaign rows found.");
-  return reviveAds({rows:out,dated:dated});
+  return reviveAds({rows:out,skipped:skipped});
 }
 function reviveAds(a){
-  a.byNorm=new Map();a.byLoose=new Map();
   a.dated=a.rows.some(function(r){return r.d!=null});
-  function push(m,k,r){var l=m.get(k);if(!l){l=[];m.set(k,l)}l.push(r)}
-  a.rows.forEach(function(r){push(a.byNorm,normCamp(r.name),r);push(a.byLoose,loosCamp(r.name),r)});
   a.total=a.rows.reduce(function(s,r){return s+r.cost},0);
   var ds=a.rows.map(function(r){return r.d}).filter(function(d){return d!=null});
   a.minD=ds.length?Math.min.apply(null,ds):null;
   a.maxD=ds.length?Math.max.apply(null,ds):null;
-  a.names=new Set();a.undated=new Set();
-  a.rows.forEach(function(r){a.names.add(normCamp(r.name));if(r.d==null)a.undated.add(normCamp(r.name))});
+  a.names=new Set();a.undated=new Set();a.accts=new Map();a.acctOf=new Map();
+  a.rows.forEach(function(r){
+    var nm=normCamp(r.name);
+    a.names.add(nm);
+    if(r.d==null)a.undated.add(nm);
+    var k=r.acct||"(no account column)";
+    a.accts.set(k,(a.accts.get(k)||0)+r.cost);
+    if(!a.acctOf.has(nm))a.acctOf.set(nm,r.acct||"");
+  });
+  a.disabled=a.disabled instanceof Set?a.disabled:new Set(a.disabled||[]);
+  a.exAcct=a.exAcct instanceof Set?a.exAcct:new Set(a.exAcct||[]);
+  rebuildAdsIndex(a);
   return a;
 }
+
+/* ---- campaign-name matching: exact, then confident fuzzy ---- */
+var AD_STOP=new Set(["the","a","an","and","for","only","best","performing","perfroming","top","high","low",
+  "volume","conv","conversions","cpa","test","not","needed","now","region","ai","max","new","old","copy",
+  "campaign","campaigns","search","google","bing","v2","b","c"]);
+function adTokens(s){
+  var t=String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim().split(" ");
+  var out=[];for(var i=0;i<t.length;i++){if(t[i]&&!AD_STOP.has(t[i]))out.push(t[i])}
+  return out;
+}
+function dice(a,b){
+  if(!a.length||!b.length)return 0;
+  var ca={},inter=0;
+  a.forEach(function(t){ca[t]=(ca[t]||0)+1});
+  b.forEach(function(t){if(ca[t]>0){ca[t]--;inter++}});
+  return 2*inter/(a.length+b.length);
+}
+function hubCampaignCandidates(){
+  var F=D.F,seen=new Set(),out=[];
+  for(var i=0;i<D.N;i++){
+    var srcL=D.DICT.src[F.src[i]];
+    if(srcL!=="Paid Search"&&srcL!=="Paid Social")continue;
+    var c=F.camp[i];
+    if(seen.has(c))continue;
+    seen.add(c);
+    var lab=D.DICT.camp[c];
+    if(!lab||lab==="(none)")continue;
+    out.push({label:lab,norm:normCamp(lab),loose:loosCamp(lab),toks:adTokens(lab),
+      exactOnly:/^(bing|msn|microsoft)[_\s-]/i.test(lab)});
+  }
+  return out;
+}
+function matchCampaigns(a){
+  var cands=hubCampaignCandidates(),byNorm=new Map(),byLoose=new Map();
+  cands.forEach(function(c){if(!byNorm.has(c.norm))byNorm.set(c.norm,c);if(!byLoose.has(c.loose))byLoose.set(c.loose,c)});
+  var map=new Map();
+  a.names.forEach(function(nm){map.set(nm,null)});
+  var byName=new Map();
+  a.rows.forEach(function(r){if(!byName.has(normCamp(r.name)))byName.set(normCamp(r.name),r.name)});
+  byName.forEach(function(orig,nm){
+    var ex=byNorm.get(nm)||byLoose.get(loosCamp(orig));
+    if(ex){map.set(nm,{hub:ex.label,score:1,kind:"exact",name:orig});return}
+    var gt=adTokens(orig),gs=gt.join(" ");
+    var b1=null,s1=0,s2=0;
+    for(var i=0;i<cands.length;i++){
+      var c=cands[i];
+      if(c.exactOnly)continue;
+      var sc=dice(gt,c.toks),hs=c.toks.join(" ");
+      if(hs&&gs.indexOf(hs)===0)sc=Math.max(sc,0.80+0.15*hs.length/Math.max(gs.length,1));
+      if(sc>s1){s2=s1;s1=sc;b1=c} else if(sc>s2){s2=sc}
+    }
+    if(b1&&s1>=0.65&&(s1>=0.9||s1-s2>=0.05))map.set(nm,{hub:b1.label,score:s1,kind:"fuzzy",name:orig});
+    else map.set(nm,{hub:null,score:s1,kind:"none",name:orig,near:b1?b1.label:null});
+  });
+  return map;
+}
+function rebuildAdsIndex(a){
+  a=a||ADS;if(!a)return;
+  a.match=matchCampaigns(a);
+  a.byHub=new Map();
+  a.rows.forEach(function(r){
+    var nm=normCamp(r.name);
+    if(a.exAcct.has(r.acct||"(no account column)"))return;
+    if(a.disabled.has(nm))return;
+    var m=a.match.get(nm);
+    if(!m||!m.hub)return;
+    var l=a.byHub.get(m.hub);if(!l){l=[];a.byHub.set(m.hub,l)}
+    l.push(r);
+  });
+}
 function adsBounds(){return periodBounds()}
+/* Spend is recorded per campaign per month. It can be split by time, but NOT by
+   state, discipline, funding or any other property of the enquiry — a campaign
+   has one cost, however its leads are distributed. So every cost-per-something
+   figure is suppressed while a non-period filter is on. */
+function segmentFilterOn(){
+  var any=false;
+  FILTER_DIMS.forEach(function(f){if(S.sel[f.k]&&S.sel[f.k].size)any=true});
+  if(S.q)any=true;
+  return any;
+}
+function segmentFilterNames(){
+  var out=[];
+  FILTER_DIMS.forEach(function(f){if(S.sel[f.k]&&S.sel[f.k].size)out.push(f.n.toLowerCase())});
+  if(S.q)out.push("search");
+  return out.join(", ");
+}
 function sumEntries(list){
   if(!list||!list.length)return null;
   var b=adsBounds(),out={name:list[0].name,cost:0,clicks:0,impr:0,conv:0,rows:0};
@@ -1313,20 +1417,44 @@ function sumEntries(list){
     if(r.d!=null&&(r.d<b.from||r.d>b.to))continue;
     out.cost+=r.cost;out.clicks+=r.clicks;out.impr+=r.impr;out.conv+=r.conv;out.rows++;
   }
-  return out.rows?out:null;
+  if(!out.rows)return null;
+  if(out.cost===0&&out.clicks===0&&out.impr===0)return null;
+  return out;
 }
 function adsFor(campLabel){
-  if(!ADS)return null;
-  return sumEntries(ADS.byNorm.get(normCamp(campLabel))||ADS.byLoose.get(loosCamp(campLabel)));
+  if(!ADS||!ADS.byHub)return null;
+  return sumEntries(ADS.byHub.get(campLabel));
 }
-function adsTotalInPeriod(){
+function adsTotalInPeriod(opts){
+  if(!ADS)return 0;
+  opts=opts||{};
+  var b=adsBounds(),t=0;
+  ADS.rows.forEach(function(r){
+    if(opts.included&&ADS.exAcct.has(r.acct||"(no account column)"))return;
+    if(r.d==null||(r.d>=b.from&&r.d<=b.to))t+=r.cost;
+  });
+  return t;
+}
+function adsConvInPeriod(){
   if(!ADS)return 0;
   var b=adsBounds(),t=0;
-  ADS.rows.forEach(function(r){if(r.d==null||(r.d>=b.from&&r.d<=b.to))t+=r.cost});
+  ADS.rows.forEach(function(r){
+    if(ADS.exAcct.has(r.acct||"(no account column)"))return;
+    if(r.d==null||(r.d>=b.from&&r.d<=b.to))t+=r.conv;
+  });
   return t;
 }
 function mergeAds(a,b){
-  return reviveAds({rows:a.rows.concat(b.rows)});
+  var dis=[];a.disabled.forEach(function(x){dis.push(x)});
+  var ex=[];a.exAcct.forEach(function(x){ex.push(x)});
+  return reviveAds({rows:a.rows.concat(b.rows),disabled:dis,exAcct:ex});
+}
+function saveAds(){
+  if(!ADS){try{localStorage.removeItem("pi_ads")}catch(e){}return}
+  var dis=[];ADS.disabled.forEach(function(x){dis.push(x)});
+  var ex=[];ADS.exAcct.forEach(function(x){ex.push(x)});
+  try{localStorage.setItem("pi_ads",JSON.stringify({rows:ADS.rows,disabled:dis,exAcct:ex}))}
+  catch(e){alert("The spend data is loaded, but it's too large for this browser to remember — you'll need to load it again next time.")}
 }
 
 /* ==========================================================================
@@ -1481,12 +1609,14 @@ function renderKpis(idx,prev){
   host.appendChild(tile("Lost — no coverage",fmtPct(cur.geoRate||0),null,null,null,fmtN(cur.geo)+" enquiries in un-serviced areas"));
   if(ADS){
     var cost=adsCostFor(idx);
-    host.appendChild(tile("Cost per booking",cost.cpb==null?"–":fmtMoney2(cost.cpb),null,null,null,
-      cost.matched?fmtMoney(cost.cost)+" matched spend":"no matching campaigns"));
+    host.appendChild(tile("Cost per booking",cost.suppressed?"–":(cost.cpb==null?"–":fmtMoney2(cost.cpb)),null,null,null,
+      cost.suppressed?"ad spend can't be split by "+segmentFilterNames():
+        (cost.matched?fmtMoney(cost.cost)+" of spend joined":"no matching campaigns")));
   }
 }
 function adsCostFor(idx){
   if(!ADS)return {cost:0,cpb:null,cpl:null,matched:0};
+  if(segmentFilterOn())return {suppressed:true,cost:0,cpb:null,cpl:null,matched:0};
   var camps=new Map(),F=D.F;
   for(var i=0;i<idx.length;i++){
     var r=idx[i],c=F.camp[r];
@@ -1624,7 +1754,7 @@ function renderSegments(idx){
     {k:"medTT",n:"Days to book",get:function(r){return r.medTT==null?"–":r.medTT.toFixed(1)}},
     {k:"open",n:"Open",get:function(r){return fmtN(r.open)}}
   ];
-  if(ADS&&(dim==="camp")){
+  if(ADS&&dim==="camp"&&!segmentFilterOn()){
     cols.splice(4,0,{k:"cost",n:"Spend",get:function(r){var a=adsFor(r.label);return a?fmtMoney(a.cost):"–"}});
     cols.splice(5,0,{k:"cpb",n:"Cost / booking",get:function(r){var a=adsFor(r.label);return (a&&r.won)?fmtMoney2(a.cost/r.won):"–"}});
     sorted.forEach(function(r){var a=adsFor(r.label);r.cost=a?a.cost:null;r.cpb=(a&&r.won)?a.cost/r.won:null});
@@ -1799,11 +1929,15 @@ function renderPaid(idx){
     {k:"medTT",n:"Days to book",get:function(r){return r.medTT==null?"–":r.medTT.toFixed(1)}}
   ];
   if(ADS){
-    cols.splice(2,0,{k:"cost",n:"Spend",get:function(r){return r.cost==null?"–":fmtMoney(r.cost)}});
-    cols.splice(3,0,{k:"cpl",n:"Cost / enquiry",get:function(r){return r.cpl==null?"–":fmtMoney2(r.cpl)}});
-    cols.push({k:"cpb",n:"Cost / booking",get:function(r){return r.cpb==null?"–":fmtMoney2(r.cpb)}});
-    cols.push({k:"wasted",n:"Spend in un-serviced areas",get:function(r){return r.wasted==null?"–":fmtMoney(r.wasted)},
-      title:"Campaign spend × share of its resolved leads lost to no coverage"});
+    var sup=segmentFilterOn();
+    cols.splice(2,0,{k:"cost",n:"Spend",title:sup?"Whole-period campaign spend — it cannot be split by the filters you have on":
+      "Campaign spend in the period you're viewing",get:function(r){return r.cost==null?"–":fmtMoney(r.cost)}});
+    if(!sup){
+      cols.splice(3,0,{k:"cpl",n:"Cost / enquiry",get:function(r){return r.cpl==null?"–":fmtMoney2(r.cpl)}});
+      cols.push({k:"cpb",n:"Cost / booking",get:function(r){return r.cpb==null?"–":fmtMoney2(r.cpb)}});
+      cols.push({k:"wasted",n:"Spend in un-serviced areas",get:function(r){return r.wasted==null?"–":fmtMoney(r.wasted)},
+        title:"Campaign spend × share of its resolved leads lost to no coverage"});
+    }
   }
   renderTable($("#campTable"),cols,sortRows(rows,S.campSort),S.campSort,function(k){
     if(S.campSort.k===k)S.campSort.dir*=-1;else S.campSort={k:k,dir:k==="label"?1:-1};
@@ -1839,38 +1973,142 @@ function renderPaid(idx){
   renderAdsCard(sub);
 }
 function renderAdsCard(sub){
-  var st=$("#adsStatus"),kv=$("#adsKv");
+  var st=$("#adsStatus"),kv=$("#adsKv"),acctBox=$("#adsAccounts"),mw=$("#adsMatchWrap");
   if(!ADS){
     st.innerHTML="No spend loaded. Export <b>Campaigns → Cost</b> from Google Ads (and Microsoft Advertising) as CSV and load it here — the dashboard joins it to these campaigns by name and works out cost per enquiry and cost per booking.";
-    kv.classList.add("hidden");$("#btnAdsClear").classList.add("hidden");
+    kv.classList.add("hidden");acctBox.classList.add("hidden");mw.classList.add("hidden");
+    $("#btnAdsClear").classList.add("hidden");
     return;
   }
   var camps=groupBy(sub,"camp");
   var matched=0,mcost=0,mleads=0,mwon=0;
-  var matchedNames=new Set();
+  var usedHub=new Set();
   camps.forEach(function(c){
     var a=adsFor(c.label);
-    if(a){matched++;mcost+=a.cost;mleads+=c.n;mwon+=c.won;matchedNames.add(normCamp(a.name))}
+    if(a){matched++;mcost+=a.cost;mleads+=c.n;mwon+=c.won;usedHub.add(c.label)}
   });
-  var b=adsBounds(),periodTotal=adsTotalInPeriod();
-  var unmatchedNames=[];
-  ADS.names.forEach(function(nm){if(!matchedNames.has(nm))unmatchedNames.push(nm)});
-  var ucost=Math.max(0,periodTotal-mcost);
-  var fdate=function(day){return dayToDate(day).toLocaleDateString("en-AU",{month:"short",year:"numeric"})};
-  st.innerHTML="Loaded <b>"+fmtN(ADS.names.size)+"</b> campaigns"+
-    (ADS.dated?" with month-by-month spend covering <b>"+fdate(Math.max(ADS.minD,D.minDay))+" – "+fdate(Math.min(ADS.maxD,D.maxDay))+"</b>":"")+
-    ". <b>"+fmtMoney(periodTotal)+"</b> of spend in the period you're looking at, matched to <b>"+
-    fmtN(matched)+"</b> campaigns."+
-    (unmatchedNames.length?" <b>"+fmtN(unmatchedNames.length)+"</b> ad campaigns ("+fmtMoney(ucost)+
-     ") produced no enquiries in this slice — either they genuinely didn't, or the campaign name in HubSpot differs.":"")+
+  var fileTotal=adsTotalInPeriod(),inclTotal=adsTotalInPeriod({included:true});
+  var gConv=adsConvInPeriod();
+  var fdate=function(day){return dayToDate(clamp(day,D.minDay,D.maxDay)).toLocaleDateString("en-AU",{month:"short",year:"numeric"})};
+  var nExact=0,nFuzzy=0,nNone=0;
+  ADS.match.forEach(function(m){if(!m)return;if(m.kind==="exact")nExact++;else if(m.kind==="fuzzy")nFuzzy++;else nNone++});
+  st.innerHTML="<b>"+fmtN(ADS.names.size)+"</b> campaigns"+
+    (ADS.dated?", spend by month from <b>"+fdate(ADS.minD)+"</b> to <b>"+fdate(ADS.maxD)+"</b>":"")+
+    (ADS.skipped?", "+fmtN(ADS.skipped)+" subtotal rows ignored":"")+
+    ". In the period you're viewing: <b>"+fmtMoney(inclTotal)+"</b> from the accounts you've included"+
+    (fileTotal>inclTotal+1?" (of "+fmtMoney(fileTotal)+" in the file)":"")+
+    ", of which <b>"+fmtMoney(mcost)+"</b> is joined to <b>"+fmtN(matched)+"</b> campaigns that produced enquiries."+
     (ADS.undated.size?' <b style="color:var(--crit-ink)">'+(ADS.undated.size===ADS.names.size?"This report has no date column":
-      fmtN(ADS.undated.size)+" of these campaigns came in without a date column")+
-      '</b>, so their full spend is counted whatever period you filter to. Re-export segmented by month for period-accurate costs.':"");
+      fmtN(ADS.undated.size)+" campaigns came in without a date")+'</b>, so their full spend counts whatever period you filter to.':"");
+
   kv.classList.remove("hidden");$("#btnAdsClear").classList.remove("hidden");
-  kv.innerHTML=[
-    ["Matched spend",fmtMoney(mcost)],["Enquiries",fmtN(mleads)],["Bookings",fmtN(mwon)],
-    ["Cost per enquiry",mleads?fmtMoney2(mcost/mleads):"–"],["Cost per booking",mwon?fmtMoney2(mcost/mwon):"–"]
-  ].map(function(p){return "<span>"+p[0]+": <b>"+p[1]+"</b></span>"}).join("");
+  var sup=segmentFilterOn();
+  if(sup){
+    st.innerHTML+='<br><b style="color:var(--crit-ink)">Cost per enquiry and cost per booking are hidden while you have a '+
+      esc(segmentFilterNames())+' filter on.</b> A campaign has one cost, however its enquiries are spread across states or '+
+      'disciplines, so there is no honest way to divide it up. Clear those filters — or narrow the period instead — to see cost figures again.';
+    kv.innerHTML=[["Spend in this period",fmtMoney(inclTotal)],
+      ["Enquiries in this slice",fmtN(mleads)],["Booked",fmtN(mwon)]]
+      .map(function(p){return "<span>"+p[0]+": <b>"+p[1]+"</b></span>"}).join("");
+  } else {
+    kv.innerHTML=[
+      ["Spend joined to enquiries",fmtMoney(mcost)],["Enquiries",fmtN(mleads)],["Booked",fmtN(mwon)],
+      ["Cost per enquiry",mleads?fmtMoney2(mcost/mleads):"–"],
+      ["Cost per booking",mwon?fmtMoney2(mcost/mwon):"–"],
+      ["Conversions Google itself counted",gConv?fmtN(gConv):"–"]
+    ].map(function(p){return "<span>"+p[0]+": <b>"+p[1]+"</b></span>"}).join("");
+  }
+
+  /* ---- accounts ---- */
+  var accts=[];ADS.accts.forEach(function(v,k){accts.push([k,v])});
+  accts.sort(function(a,b){return b[1]-a[1]});
+  if(accts.length>1){
+    acctBox.classList.remove("hidden");
+    var matchedByAcct=new Map();
+    ADS.rows.forEach(function(r){
+      var m=ADS.match.get(normCamp(r.name));
+      if(m&&m.hub&&!ADS.disabled.has(normCamp(r.name))){
+        var k=r.acct||"(no account column)";
+        matchedByAcct.set(k,(matchedByAcct.get(k)||0)+r.cost);
+      }
+    });
+    acctBox.innerHTML='<p class="desc" style="margin:0 0 8px">Which ad accounts feed this pipeline? Untick anything that books through a different funnel — its spend then stops counting towards the totals above.</p>';
+    accts.forEach(function(p){
+      var lab=el("label","toggle");
+      var cb=el("input");cb.type="checkbox";cb.checked=!ADS.exAcct.has(p[0]);
+      cb.addEventListener("change",function(){
+        if(cb.checked)ADS.exAcct.delete(p[0]);else ADS.exAcct.add(p[0]);
+        rebuildAdsIndex();saveAds();applyFilters();
+      });
+      lab.appendChild(cb);
+      var mc=matchedByAcct.get(p[0])||0;
+      lab.appendChild(el("span",null,p[0]+" — "+fmtMoney(p[1])+
+        (mc>0?"  ·  "+fmtPct(mc/(p[1]||1),0)+" joined":"  ·  nothing joined")));
+      acctBox.appendChild(lab);
+    });
+  } else acctBox.classList.add("hidden");
+
+  /* ---- match review ---- */
+  mw.classList.remove("hidden");
+  $("#adsMatchSummary").textContent="Campaign name matching — "+fmtN(nExact)+" exact, "+
+    fmtN(nFuzzy)+" matched on a renamed campaign, "+fmtN(nNone)+" not matched";
+  var b=adsBounds(),spendByName=new Map();
+  ADS.rows.forEach(function(r){
+    if(r.d!=null&&(r.d<b.from||r.d>b.to))return;
+    var nm=normCamp(r.name);
+    spendByName.set(nm,(spendByName.get(nm)||0)+r.cost);
+  });
+  var leadsByHub=new Map();
+  groupBy(sub,"camp").forEach(function(c){leadsByHub.set(c.label,c)});
+  var mrows=[];
+  ADS.match.forEach(function(m,nm){
+    if(!m)return;
+    var cost=spendByName.get(nm)||0;
+    var acct=ADS.acctOf.get(nm)||"";
+    var hubStats=m.hub?leadsByHub.get(m.hub):null;
+    mrows.push({name:m.name,nm:nm,acct:acct||"",hub:m.hub,kind:m.kind,score:m.score,near:m.near,
+      cost:cost,leads:hubStats?hubStats.n:0,off:ADS.disabled.has(nm),
+      excl:ADS.exAcct.has(acct||"(no account column)")});
+  });
+  var hubClaims=new Map();
+  mrows.forEach(function(r){if(r.hub&&!r.off&&!r.excl)hubClaims.set(r.hub,(hubClaims.get(r.hub)||0)+1)});
+  mrows.forEach(function(r){r.shared=r.hub?(hubClaims.get(r.hub)||0):0});
+  mrows.sort(function(a,b2){return b2.cost-a.cost});
+  var shown=mrows.filter(function(r){return r.cost>0||r.hub});
+  renderTable($("#adsMatch"),[
+    {k:"name",n:"Campaign in the ad account",sortable:false,get:function(r){
+      return {html:esc(r.name)+(r.acct?'<br><span class="muted" style="font-size:11.5px">'+esc(r.acct)+"</span>":""),cls:""}}},
+    {k:"cost",n:"Spend",sortable:false,get:function(r){return fmtMoney(r.cost)}},
+    {k:"hub",n:"Joined to (HubSpot)",sortable:false,get:function(r){
+      if(!r.hub)return {html:'<span class="muted">not joined'+(r.near?" · closest was "+esc(r.near):"")+"</span>",cls:""};
+      return {html:esc(r.hub)+(r.shared>1?'<br><span class="muted" style="font-size:11.5px">shared with '+
+        (r.shared-1)+" other ad campaign"+(r.shared>2?"s":"")+" — their spend is added together</span>":""),cls:""}}},
+    {k:"kind",n:"Match",sortable:false,get:function(r){
+      if(!r.hub)return {html:'<span class="pill n">none</span>',cls:"num"};
+      if(r.kind==="exact")return {html:'<span class="pill g">exact</span>',cls:"num"};
+      return {html:'<span class="pill '+(r.score>=0.8?"g":"n")+'">renamed · '+Math.round(r.score*100)+"%</span>",cls:"num"}}},
+    {k:"leads",n:"Enquiries",sortable:false,get:function(r){return r.hub?fmtN(r.leads):"–"}},
+    {k:"off",n:"Use it?",sortable:false,get:function(r){
+      if(!r.hub)return {html:'<span class="muted">–</span>',cls:"num"};
+      if(r.excl)return {html:'<span class="muted">account off</span>',cls:"num"};
+      return {html:'<input type="checkbox" data-nm="'+esc(r.nm)+'"'+(r.off?"":" checked")+' aria-label="Use this match">',cls:"num"}}}
+  ],shown.slice(0,400));
+  $$('#adsMatch input[type="checkbox"]').forEach(function(cb){
+    cb.addEventListener("change",function(){
+      var nm=cb.dataset.nm;
+      if(cb.checked)ADS.disabled.delete(nm);else ADS.disabled.add(nm);
+      rebuildAdsIndex();saveAds();applyFilters();
+    });
+  });
+  var hidden=shown.length-Math.min(shown.length,400);
+  var sharedN=0;hubClaims.forEach(function(v){if(v>1)sharedN++});
+  $("#adsMatchNote").innerHTML=(sharedN?"<b>"+fmtN(sharedN)+" HubSpot campaign"+(sharedN>1?"s have":" has")+
+      " more than one ad campaign pointing at "+(sharedN>1?"them":"it")+"</b> — usually a campaign that was split or renamed mid-year, "+
+      "and their spend is added together. Worth a look if any of those numbers surprise you.<br><br>":"")+
+    "Exact means the name is identical bar capitals and spacing. <b>Renamed</b> means the campaign has been "+
+    "renamed in the ad account since HubSpot recorded it — the join is on the words in common, and the percentage is how close it is. "+
+    "Untick anything that looks wrong and the spend stops counting immediately."+
+    (hidden>0?" Showing the top 400 by spend of "+fmtN(shown.length)+".":"");
 }
 
 /* ==========================================================================
@@ -2150,7 +2388,7 @@ function renderOpps(idx){
   }
 
   /* 6. paid efficiency with spend */
-  if(ADS){
+  if(ADS&&!segmentFilterOn()){
     var camps=groupBy(idx,"camp").filter(function(c){return c.n>=15});
     var withCost=[];
     camps.forEach(function(c){var a=adsFor(c.label);if(a&&a.cost>0){c.cost=a.cost;c.cpb=c.won?a.cost/c.won:null;withCost.push(c)}});
@@ -2359,6 +2597,7 @@ $("#fileDeals").addEventListener("change",function(){
     var objs=rowsToObjects(rows,hi);
     var nd=buildFromObjects(objs);
     D=nd;LOADED=iso(new Date());
+    if(ADS)rebuildAdsIndex();
     try{localStorage.setItem("pi_deals",JSON.stringify(serialise(nd)))}catch(e){}
     S.sel={state:new Set(),disc:new Set(),src:new Set(),rel:new Set(),fund:new Set(),deliv:new Set(),plat:new Set()};
     buildMultiSelects();applyFilters();
@@ -2382,6 +2621,7 @@ try{
 function useBuiltIn(){
   try{localStorage.removeItem("pi_deals")}catch(e){}
   D=unpackEmbedded(RAW);LOADED=null;
+  if(ADS)rebuildAdsIndex();
   S.sel={state:new Set(),disc:new Set(),src:new Set(),rel:new Set(),fund:new Set(),deliv:new Set(),plat:new Set()};
   buildMultiSelects();applyFilters();
 }
@@ -2398,13 +2638,12 @@ $("#fileAds").addEventListener("change",function(){
       var add=confirm("Add this spend to what's already loaded?\n\nOK = add it (use this for a second account, e.g. Microsoft Advertising).\nCancel = replace what's loaded.");
       ADS=add?mergeAds(ADS,incoming):incoming;
     } else ADS=incoming;
-    try{localStorage.setItem("pi_ads",JSON.stringify({rows:ADS.rows}))}catch(e){}
-    applyFilters();
+    saveAds();applyFilters();
   });
 });
 $("#btnAdsClear").addEventListener("click",function(){
-  ADS=null;try{localStorage.removeItem("pi_ads")}catch(e){}
-  applyFilters();
+  if(!confirm("Remove the loaded ad spend?"))return;
+  ADS=null;saveAds();applyFilters();
 });
 $("#btnCsv").addEventListener("click",function(){
   var F=D.F,hdr=["Create date","State","Suburb","Postcode","Discipline","Relationship","Funding","Delivery",
@@ -2507,6 +2746,7 @@ window.addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(funct
 /* ==========================================================================
    17. GO
    ========================================================================== */
+try{var sa=localStorage.getItem("pi_ads");if(sa)ADS=reviveAds(JSON.parse(sa))}catch(e){ADS=null}
 buildTabs();buildMultiSelects();wireViewToggles();applyFilters();
 })();
 
