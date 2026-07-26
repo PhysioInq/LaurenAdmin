@@ -70,9 +70,14 @@ data is inside the file and nothing is sent anywhere.
   keyword, deal owner or month. Sortable, with a volume-vs-conversion scatter for
   "where does the next dollar go".
 - **Cross-cut** — any two dimensions as a heat map (conversion, volume, bookings
-  or geo-blocked rate).
+  or geo-blocked rate), with a built-in explainer covering what each number means,
+  how the shading works, and three cross-cuts worth running.
 - **Why we lose** — recorded loss reasons, split by channel, plus a
   suburb/postcode list of demand we couldn't service.
+- **Recruitment** — unmet demand by area *and discipline*, so each location comes
+  with the role attached. State summary → click a state to drill into its suburbs
+  → group by postcode district for a realistic catchment. Exports to CSV for the
+  recruitment team.
 - **Paid channels** — campaign and keyword performance; load a Google Ads or
   Microsoft Advertising campaign export and it works out cost per enquiry and
   cost per booking per campaign.
@@ -97,9 +102,27 @@ suburb, postcode, campaign and keyword. Every chart has a **Table** toggle, and
   enquiries by campaign name, so the names in Google Ads need to match what
   lands in HubSpot's "original source drill-down 1".
 
+## Unmet demand (the Recruitment tab)
+
+Two things count as unmet:
+
+- **Coverage gap** — lost with the reason *No Appropriate Therapist – Geography –
+  Declined Telehealth*. Nobody travels there and the client didn't want telehealth.
+- **Capacity & skills gap** — lost with any other *No Appropriate Therapist*
+  reason (at capacity, skills, age, discipline not in the service area), plus
+  enquiries still sitting in the *WL Therapist at Capacity* stage. On by default;
+  untick the switch for pure coverage gaps.
+
+Discipline columns count what each enquiry asked for, so an enquiry naming two
+disciplines appears under both — the columns add up to more than the total.
+
 ## A note on the conversion rate
 
 Conversion = booked ÷ (booked + lost). Enquiries still in progress are left out.
+A loss reason only counts when the enquiry actually ended lost — 706 enquiries
+carry a "failed to convert" reason but finished booked, usually after a first
+attempt at matching a therapist failed, so figures taken straight off HubSpot's
+reason field read slightly higher.
 Losses take longer to be recorded than bookings, so the most recent few weeks
 always read high — that window is shaded on the trend chart, and the
 **Mature leads only** switch removes it.

@@ -163,6 +163,7 @@
 
   /* ===== tables ===== */
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .tw.scroll{max-height:600px;overflow-y:auto}
   table{border-collapse:collapse;width:100%;font-size:13px}
   th,td{text-align:right;padding:7px 9px;border-bottom:1px solid var(--border);white-space:nowrap}
   th:first-child,td:first-child{text-align:left;white-space:normal;min-width:150px}
@@ -197,6 +198,28 @@
   .opp .do{font-size:12.7px;background:var(--surface-2);border-radius:9px;padding:8px 11px;color:var(--ink)}
   .opp .do b{color:var(--accent-ink)}
 
+
+  /* ===== how-to / definitions ===== */
+  details.howto{border:1px solid var(--border);border-radius:11px;background:var(--surface-2);margin:0 0 14px;overflow:hidden}
+  details.howto > summary{cursor:pointer;list-style:none;padding:10px 13px;font-size:13px;font-weight:650;color:var(--ink);
+    display:flex;align-items:center;gap:8px}
+  details.howto > summary::-webkit-details-marker{display:none}
+  details.howto > summary::before{content:"›";display:inline-block;transition:transform .15s;font-size:16px;color:var(--ink-3);line-height:1}
+  details.howto[open] > summary::before{transform:rotate(90deg)}
+  details.howto .body{padding:2px 15px 14px;font-size:13px;color:var(--ink-2);max-width:74ch}
+  details.howto .body p{margin:0 0 9px}
+  details.howto .body b{color:var(--ink)}
+  dl.defs{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:0 0 11px;font-size:12.8px}
+  dl.defs dt{font-weight:700;color:var(--ink);white-space:nowrap}
+  dl.defs dd{margin:0;color:var(--ink-2)}
+  ul.steps{margin:0 0 4px;padding-left:18px}
+  ul.steps li{margin-bottom:5px}
+  .eg{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin:0 0 8px;font-size:12.7px}
+  .eg b{color:var(--accent-ink)}
+  .rolecell{font-weight:700}
+  .zero{color:var(--ink-3)}
+  tbody tr.tot{background:var(--surface-2);font-weight:700}
+  tbody tr.tot td{border-top:1px solid var(--border-strong)}
   .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
   @media(max-width:900px){.grid2{grid-template-columns:1fr}}
   .note{font-size:12.4px;color:var(--ink-2);background:var(--surface-2);border-radius:9px;padding:9px 12px;margin-top:10px}
@@ -336,7 +359,26 @@
             <div class="viewtog" data-view="matrix"><button data-v="chart" aria-pressed="true">Chart</button><button data-v="table" aria-pressed="false">Table</button></div>
           </div>
         </div>
-        <p class="desc">Cells with fewer than 20 resolved enquiries are greyed — too thin to act on. Numbers are printed in every cell, so nothing depends on colour alone.</p>
+        <p class="desc">Pick any two things to cross. Each cell is the enquiries that are <b>both</b> — the row <i>and</i> the column — measured by whichever number you choose.</p>
+        <details class="howto">
+          <summary>What the numbers mean, and how to use this</summary>
+          <div class="body">
+            <dl class="defs">
+              <dt>Conversion rate</dt><dd>Bookings ÷ resolved enquiries in that cell. <i>Resolved</i> means the enquiry ended up either booked or lost; ones still in progress are left out.</dd>
+              <dt>Lead volume</dt><dd>Every enquiry in that cell, including ones still open.</dd>
+              <dt>Bookings won</dt><dd>Enquiries that reached a confirmed appointment. Use this when you want size of prize rather than efficiency.</dd>
+              <dt>Geo-blocked rate</dt><dd>Share of resolved enquiries lost because no therapist covers the area and the client declined telehealth. High here is a <b>coverage</b> problem, not a marketing one.</dd>
+              <dt>Grey cell</dt><dd>Fewer than 20 resolved enquiries — too few to draw a conclusion from. The number is still shown, just don't act on it.</dd>
+              <dt>Blank cell</dt><dd>No enquiries at all in that combination.</dd>
+            </dl>
+            <p><b>How to read it.</b> Colour is relative to the cells currently on screen — darkest is the highest value in <i>this</i> view, not an absolute score. Change a filter and the shading re-scales. Every value is also printed, and <b>Table</b> gives you the same grid as plain text. Hover a cell for the full counts behind it.</p>
+            <p><b>The page filters still apply.</b> Whatever is set at the top — period, state, source, funding — narrows the matrix too. So you can, for example, filter to Paid Search and then cross State × Discipline to see only what advertising is producing.</p>
+            <p><b>Three worth running:</b></p>
+            <div class="eg"><b>State × Discipline</b>, conversion rate — which discipline underperforms in which state. A discipline that converts well everywhere except one state is a local delivery or capacity issue, not a demand issue.</div>
+            <div class="eg"><b>State × Original source</b>, geo-blocked rate — which channels are buying demand you can't service, state by state. Anything above ~15% is worth a targeting change.</div>
+            <div class="eg"><b>Relationship × Funding type</b>, bookings won — where the volume actually comes from. Useful for deciding whether next quarter leans on referrer relationships or consumer advertising.</div>
+          </div>
+        </details>
         <div class="chart" id="matrix"></div>
       </div>
     </section>
@@ -361,6 +403,53 @@
         </div>
         <p class="desc">Places where we bought or earned demand we could not service. Each of these is a choice: <b>recruit</b>, <b>push telehealth</b>, or <b>stop advertising there</b>.</p>
         <div class="tw"><table id="geoTable"></table></div>
+      </div>
+    </section>
+
+    <!-- ============ RECRUITMENT ============ -->
+    <section class="panel" data-panel="recruit">
+      <div class="card">
+        <div class="ch">
+          <h2>Unmet demand — where to recruit, and for what</h2>
+          <div class="frow">
+            <label class="toggle" title="Adds losses where no therapist was available for another reason, plus enquiries sitting on the capacity waitlist."><input type="checkbox" id="rcCap" checked> Include capacity &amp; skills gaps</label>
+            <button class="btn" id="rcCsv">⬇︎ Download for recruitment</button>
+          </div>
+        </div>
+        <p class="desc">Every enquiry we could not service because there was no suitable therapist — broken down by the discipline that was asked for, so each area comes with the role attached.</p>
+        <details class="howto">
+          <summary>What counts as unmet demand here</summary>
+          <div class="body">
+            <dl class="defs">
+              <dt>Coverage gap</dt><dd>Lost with the reason <i>No Appropriate Therapist – Geography – Declined Telehealth</i>. Someone asked, we had nobody who travels there, and they didn't want telehealth.</dd>
+              <dt>Capacity &amp; skills gap</dt><dd>Lost with any other <i>No Appropriate Therapist</i> reason — at capacity, skills, age, or discipline not in the service area — plus enquiries still sitting in the <i>WL Therapist at Capacity</i> stage. Included by default; untick the switch above to see pure coverage gaps only.</dd>
+              <dt>Discipline columns</dt><dd>Counted from what the enquiry asked for. An enquiry that asked for two disciplines is counted under <b>both</b>, so the discipline columns can add up to more than the total.</dd>
+              <dt>Suggested role</dt><dd>Simply the discipline with the most unmet enquiries in that area. Where two are close, the row is worth reading in full.</dd>
+              <dt>Also booked here</dt><dd>Appointments we did fulfil in the same area. High unmet <i>and</i> high booked means a proven catchment that's out of capacity — usually the strongest case for a hire.</dd>
+            </dl>
+            <p><b>How to use it.</b> Start on the state summary to see which roles are short nationally, click a state to drill into it, then switch the detail table to <b>Postcode district</b> — a single therapist covers a radius, not one suburb, so districts show a realistic catchment. <b>Download for recruitment</b> exports exactly what's on screen.</p>
+            <p>The page filters at the top still apply, so you can scope this to the last 90 days, or to a single funding type, before handing it over.</p>
+          </div>
+        </details>
+        <div class="tw"><table id="rcSummary"></table></div>
+        <p class="desc" id="rcSummaryNote" style="margin:10px 0 0"></p>
+      </div>
+
+      <div class="card">
+        <div class="ch">
+          <h2>Areas to target</h2>
+          <div class="frow">
+            <span class="fl">State</span><select id="rcState"></select>
+            <span class="fl">Group by</span><select id="rcLevel">
+              <option value="city">Suburb</option>
+              <option value="pc">Postcode</option>
+              <option value="pc3">Postcode district</option>
+            </select>
+            <span class="fl">Min unmet</span><select id="rcMin"><option>1</option><option selected>2</option><option>3</option><option>5</option><option>10</option></select>
+          </div>
+        </div>
+        <p class="desc" id="rcCaption"></p>
+        <div class="tw scroll"><table id="rcTable"></table></div>
       </div>
     </section>
 
@@ -502,6 +591,7 @@ function finalise(o){
     if(/too pricey|funding not supported/.test(L)) o.PRICE.add(code);
     if(/wanted in-clinic|service not provided|weekend|doesn.t want to wait/.test(L)) o.NOFIT.add(code);
   });
+  o.WLCAP=o.DICT.stage.indexOf("WL Therapist at Capacity");
   o.NOFAIL=o.DICT.fail.indexOf("");
   o.NOT_TRACKED=o.DICT.src.indexOf("Not tracked");
   o.codeOf=function(field,label){return o.DICT[field].indexOf(label)};
@@ -554,6 +644,7 @@ var S={
   segDim:"src", segMin:25, segSort:{k:"n",dir:-1},
   mxRow:"state", mxCol:"disc", mxMetric:"cr",
   geoLevel:"city", campMin:25, campScope:"paid", campSort:{k:"n",dir:-1},
+  rcCap:true, rcState:"", rcLevel:"city", rcMin:2, rcSort:{k:"unmet",dir:-1},
   views:{}
 };
 var ADS=null; // {rows:[], byNorm:Map, from, to, currency}
@@ -1719,6 +1810,169 @@ function renderAdsCard(sub){
 }
 
 /* ==========================================================================
+   11b. RECRUITMENT — unmet demand by area and discipline
+   ========================================================================== */
+function unmetKind(i){
+  var F=D.F;
+  if(F.o[i]===0){
+    var f=F.fail[i];
+    if(D.GEO.has(f))return "geo";
+    if(D.CAP.has(f))return "cap";
+    return null;
+  }
+  if(F.stage[i]===D.WLCAP)return "cap";
+  return null;
+}
+function pc3Label(pc){
+  if(!pc)return "(no postcode)";
+  return pc.length>=4?pc.slice(0,3)+"x":pc;
+}
+function rcGroupKey(i,level){
+  var F=D.F;
+  if(level==="city")return D.DICT.city[F.city[i]];
+  if(level==="pc"){var p=D.DICT.pc[F.pc[i]];return p||"(no postcode)"}
+  return pc3Label(D.DICT.pc[F.pc[i]]);
+}
+function rcCollect(idx,level,stateFilter){
+  var F=D.F,map=new Map();
+  for(var i=0;i<idx.length;i++){
+    var r=idx[i],st=D.DICT.state[F.state[r]];
+    if(stateFilter&&st!==stateFilter)continue;
+    var key=st+"\u0001"+rcGroupKey(r,level),g=map.get(key);
+    if(!g){
+      g={state:st,area:rcGroupKey(r,level),geo:0,cap:0,unmet:0,n:0,won:0,
+         disc:D.discs.map(function(){return 0}),discOther:0,pcs:new Map()};
+      map.set(key,g);
+    }
+    g.n++; if(F.o[r]===1)g.won++;
+    var kind=unmetKind(r);
+    if(!kind)continue;
+    if(kind==="cap"&&!S.rcCap)continue;
+    g[kind]++; g.unmet++;
+    var pc=D.DICT.pc[F.pc[r]];
+    if(pc)g.pcs.set(pc,(g.pcs.get(pc)||0)+1);
+    var m=F.dm[r],any=false;
+    D.discs.forEach(function(dn,ix){if(m&(1<<ix)){g.disc[ix]++;any=true}});
+    if(!any)g.discOther++;
+  }
+  var out=[];
+  map.forEach(function(g){
+    if(!g.unmet)return;
+    var best=-1,bi=-1;
+    g.disc.forEach(function(v,ix){if(v>best){best=v;bi=ix}});
+    g.role=best>0?D.discs[bi]:"Not recorded";
+    g.roleN=best>0?best:g.discOther;
+    var pcArr=[];g.pcs.forEach(function(v,k){pcArr.push([k,v])});
+    pcArr.sort(function(a,b){return b[1]-a[1]});
+    var solid=pcArr.filter(function(p){return p[1]>1});
+    if(!solid.length)solid=pcArr.slice(0,1);
+    g.pcList=solid.slice(0,3).map(function(p){return p[0]}).join(", ");
+    out.push(g);
+  });
+  return out;
+}
+function renderRecruit(idx){
+  var F=D.F;
+  /* ---- state × discipline summary ---- */
+  var states=new Map();
+  for(var i=0;i<idx.length;i++){
+    var r=idx[i],kind=unmetKind(r);
+    var st=D.DICT.state[F.state[r]];
+    var g=states.get(st);
+    if(!g){g={state:st,geo:0,cap:0,unmet:0,res:0,won:0,disc:D.discs.map(function(){return 0}),other:0};states.set(st,g)}
+    if(F.o[r]!==2)g.res++;
+    if(F.o[r]===1)g.won++;
+    if(!kind)continue;
+    if(kind==="cap"&&!S.rcCap)continue;
+    g[kind]++;g.unmet++;
+    var m=F.dm[r],any=false;
+    D.discs.forEach(function(dn,ix){if(m&(1<<ix)){g.disc[ix]++;any=true}});
+    if(!any)g.other++;
+  }
+  var srows=[];states.forEach(function(g){if(g.unmet)srows.push(g)});
+  srows.sort(function(a,b){return b.unmet-a.unmet});
+  var tot={state:"All states",geo:0,cap:0,unmet:0,res:0,won:0,disc:D.discs.map(function(){return 0}),other:0,isTot:true};
+  srows.forEach(function(g){
+    tot.geo+=g.geo;tot.cap+=g.cap;tot.unmet+=g.unmet;tot.res+=g.res;tot.won+=g.won;tot.other+=g.other;
+    g.disc.forEach(function(v,ix){tot.disc[ix]+=v});
+  });
+  var maxU=Math.max.apply(null,srows.map(function(g){return g.unmet}).concat([1]));
+  var scols=[
+    {k:"state",n:"State",sortable:false,get:function(g){
+      return g.isTot?"All states":{html:'<b>'+esc(g.state)+"</b>",cls:""}}},
+    {k:"unmet",n:"Unmet enquiries",sortable:false,get:function(g){
+      return g.isTot?fmtN(g.unmet):barCell(g.unmet,maxU,fmtN(g.unmet))}},
+    {k:"share",n:"% of resolved",sortable:false,title:"Unmet as a share of all resolved enquiries in that state",
+      get:function(g){return g.res?fmtPct(g.unmet/g.res,1):"–"}}
+  ];
+  D.discs.forEach(function(dn,ix){
+    scols.push({k:"d"+ix,n:shortLab(dn),title:dn+" — enquiries that asked for this discipline",sortable:false,
+      get:function(g){return g.disc[ix]?fmtN(g.disc[ix]):{html:'<span class="zero">0</span>',cls:"num"}}});
+  });
+  scols.push({k:"role",n:"Biggest gap",sortable:false,get:function(g){
+    var best=-1,bi=-1;g.disc.forEach(function(v,ix){if(v>best){best=v;bi=ix}});
+    return best>0?{html:'<span class="rolecell">'+esc(shortLab(D.discs[bi]))+"</span>",cls:"num"}:"–"}});
+  scols.push({k:"won",n:"Booked in state",sortable:false,get:function(g){return fmtN(g.won)}});
+  renderTable($("#rcSummary"),scols,srows.concat([tot]));
+  var sn=$("#rcSummaryNote");
+  if(sn)sn.innerHTML="Discipline columns count what each enquiry asked for, so an enquiry naming two disciplines "+
+    "appears under both — they add up to more than the total. <b>Click a state</b> to drill into its suburbs below.";
+  $$("#rcSummary tbody tr").forEach(function(tr,ix){
+    if(ix>=srows.length){tr.className="tot";return}
+    tr.style.cursor="pointer";
+    tr.title="Show only "+srows[ix].state+" below";
+    tr.addEventListener("click",function(){
+      S.rcState=srows[ix].state;$("#rcState").value=S.rcState;renderRecruit(CUR.idx);
+      var d=$("#rcTable");if(d&&d.scrollIntoView)d.scrollIntoView({block:"center",behavior:"smooth"});
+    });
+  });
+
+  /* ---- state picker ---- */
+  var sel=$("#rcState"),keep=S.rcState;
+  sel.innerHTML="";
+  var o0=el("option",null,"All states");o0.value="";sel.appendChild(o0);
+  srows.forEach(function(g){var o=el("option",null,g.state+" ("+fmtN(g.unmet)+")");o.value=g.state;sel.appendChild(o)});
+  sel.value=keep;
+  if(sel.value!==keep){S.rcState="";sel.value=""}
+
+  /* ---- detail table ---- */
+  var rows=rcCollect(idx,S.rcLevel,S.rcState).filter(function(g){return g.unmet>=S.rcMin});
+  rows.forEach(function(g){D.discs.forEach(function(dn,ix){g["disc"+ix]=g.disc[ix]})});
+  rows=sortRows(rows,S.rcSort);
+  var maxD=Math.max.apply(null,rows.map(function(g){return g.unmet}).concat([1]));
+  var lvlName=S.rcLevel==="city"?"Suburb":(S.rcLevel==="pc"?"Postcode":"Postcode district");
+  var cols=[
+    {k:"area",n:lvlName,get:function(g){return g.area+(S.rcState?"":"  ·  "+g.state)}},
+    {k:"unmet",n:"Unmet",title:"Enquiries we could not service",get:function(g){return barCell(g.unmet,maxD,fmtN(g.unmet))}},
+    {k:"geo",n:"No cover",title:"Nobody travels there and telehealth was declined",get:function(g){return g.geo?fmtN(g.geo):{html:'<span class="zero">0</span>',cls:"num"}}}
+  ];
+  if(S.rcCap)cols.push({k:"cap",n:"Capacity",title:"Lost at capacity, on skills or age, or sitting on the capacity waitlist",
+    get:function(g){return g.cap?fmtN(g.cap):{html:'<span class="zero">0</span>',cls:"num"}}});
+  D.discs.forEach(function(dn,ix){
+    cols.push({k:"disc"+ix,n:shortLab(dn),title:dn,sortable:true,
+      get:function(g){return g.disc[ix]?fmtN(g.disc[ix]):{html:'<span class="zero">0</span>',cls:"num"}}});
+  });
+  cols.push({k:"role",n:"Role to hire",title:"The discipline with the most unmet enquiries here",get:function(g){
+    return {html:'<span class="rolecell">'+esc(shortLab(g.role))+"</span> <span class=\"muted\">×"+g.roleN+"</span>",cls:"num"}}});
+  cols.push({k:"won",n:"Booked",title:"Appointments we did fulfil in the same area",get:function(g){return fmtN(g.won)}});
+  cols.push({k:"n",n:"Enquiries",title:"Every enquiry from this area, serviced or not",get:function(g){return fmtN(g.n)}});
+  if(S.rcLevel!=="pc")cols.push({k:"pcList",n:"Postcodes",sortable:false,get:function(g){return g.pcList||"–"}});
+  renderTable($("#rcTable"),cols,rows,S.rcSort,function(k){
+    if(S.rcSort.k===k)S.rcSort.dir*=-1;else S.rcSort={k:k,dir:k==="area"||k==="role"?1:-1};
+    renderRecruit(CUR.idx);
+  });
+  var totU=rows.reduce(function(a,g){return a+g.unmet},0);
+  $("#rcCaption").innerHTML=fmtN(rows.length)+" "+lvlName.toLowerCase()+(rows.length===1?"":"s")+
+    " with at least "+S.rcMin+" unmet "+(S.rcMin===1?"enquiry":"enquiries")+
+    (S.rcState?" in <b>"+esc(S.rcState)+"</b>":" across Australia")+", covering <b>"+fmtN(totU)+
+    "</b> enquiries we could not service."+
+    (rows.length>18?" The table scrolls — <b>Download for recruitment</b> gives you all "+fmtN(rows.length)+" rows.":"")+
+    " Click a column heading to re-sort; click a state in the table above to drill in.";
+  RC_EXPORT={cols:cols,rows:rows,level:lvlName};
+}
+var RC_EXPORT=null;
+
+/* ==========================================================================
    12. OPPORTUNITY ENGINE
    ========================================================================== */
 function oppCard(kind,tag,title,big,body,bullets,action){
@@ -1917,7 +2171,7 @@ function wireViewToggles(){
   });
 }
 var TABS=[["trends","Trends"],["segments","Segments"],["matrix","Cross-cut"],["losses","Why we lose"],
-          ["paid","Paid channels"],["opps","Opportunities"],["method","Method"]];
+          ["recruit","Recruitment"],["paid","Paid channels"],["opps","Opportunities"],["method","Method"]];
 function buildTabs(){
   var host=$("#tabs");host.innerHTML="";
   TABS.forEach(function(t){
@@ -1938,6 +2192,7 @@ function renderAll(){
   else if(S.tab==="segments")renderSegments(idx);
   else if(S.tab==="matrix")renderMatrix(idx);
   else if(S.tab==="losses")renderLosses(idx);
+  else if(S.tab==="recruit")renderRecruit(idx);
   else if(S.tab==="paid")renderPaid(idx);
   else if(S.tab==="opps")renderOpps(idx);
   else if(S.tab==="method")renderMethod();
@@ -1977,6 +2232,14 @@ function renderMethod(){
      '"General Practitioner/Medical Specialist" folded into <i>GP / Medical Specialist</i>; suburb names title-cased; '+
      'postcodes reduced to digits. Multi-discipline enquiries (e.g. "Occupational Therapy; Speech Therapy") are counted as '+
      '<i>Multiple disciplines</i> in breakdowns, but the discipline <b>filter</b> matches any enquiry that mentions that discipline.</div>';
+  h+='<div class="note"><b>A loss reason only counts when the enquiry actually ended lost.</b> '+fmtN(reasonNotLost())+
+     ' enquiries in the export carry a "failed to convert" reason but finished somewhere else — mostly booked in the end, '+
+     'after a first attempt at matching a therapist failed. Those are counted as bookings here, not losses, so figures pulled '+
+     'straight off the reason field in HubSpot will read slightly higher than this dashboard.</div>';
+  h+='<div class="note"><b>Unmet demand</b> on the Recruitment tab means either a <b>coverage gap</b> (lost to '+
+     '"No Appropriate Therapist – Geography – Declined Telehealth") or, when the switch is on, a <b>capacity or skills gap</b> '+
+     '— lost to any other "No Appropriate Therapist" reason, plus enquiries sitting in the <i>WL Therapist at Capacity</i> stage. '+
+     'Discipline columns there count what each enquiry asked for, so a two-discipline enquiry appears under both.</div>';
   h+='<div class="note"><b>Geo-blocked</b> is the loss reason "No Appropriate Therapist – Geography – Declined Telehealth". '+
      'It is separated out everywhere because it is a coverage problem: the marketing worked, the service could not reach them.</div>';
   h+='<div class="note"><b>Source</b> is HubSpot\'s <i>original</i> traffic source (first touch) unless a chart says <i>latest</i>. '+
@@ -2001,6 +2264,11 @@ function renderMethod(){
       var v=r.won?"Booked":(r.lost?"Lost":"Still open");
       return {html:'<span class="pill '+(r.won?"g":(r.lost?"b":"n"))+'">'+v+"</span>",cls:"num"}}}
   ],stages);
+}
+function reasonNotLost(){
+  var F=D.F,n=0;
+  for(var i=0;i<D.N;i++)if(F.o[i]!==0&&F.fail[i]!==D.NOFAIL)n++;
+  return n;
 }
 function countSrc(label){
   var c=D.DICT.src.indexOf(label);if(c<0)return 0;
@@ -2139,6 +2407,29 @@ $("#mxRow").addEventListener("change",function(){S.mxRow=this.value;renderMatrix
 $("#mxCol").addEventListener("change",function(){S.mxCol=this.value;renderMatrix(CUR.idx)});
 $("#mxMetric").addEventListener("change",function(){S.mxMetric=this.value;renderMatrix(CUR.idx)});
 $("#geoLevel").addEventListener("change",function(){S.geoLevel=this.value;renderLosses(CUR.idx)});
+$("#rcCap").addEventListener("change",function(){S.rcCap=this.checked;renderRecruit(CUR.idx)});
+$("#rcState").addEventListener("change",function(){S.rcState=this.value;renderRecruit(CUR.idx)});
+$("#rcLevel").addEventListener("change",function(){S.rcLevel=this.value;renderRecruit(CUR.idx)});
+$("#rcMin").addEventListener("change",function(){S.rcMin=parseInt(this.value,10);renderRecruit(CUR.idx)});
+$("#rcCsv").addEventListener("click",function(){
+  if(!RC_EXPORT||!RC_EXPORT.rows.length){alert("Nothing to export in this view.");return}
+  var hdr=[RC_EXPORT.level,"State","Unmet enquiries","No coverage"];
+  if(S.rcCap)hdr.push("Capacity or skills");
+  D.discs.forEach(function(d){hdr.push(d)});
+  hdr=hdr.concat(["Suggested role","Also booked here","All enquiries","Postcodes"]);
+  var lines=[hdr.join(",")];
+  RC_EXPORT.rows.forEach(function(g){
+    var row=[g.area,g.state,g.unmet,g.geo];
+    if(S.rcCap)row.push(g.cap);
+    D.discs.forEach(function(d,ix){row.push(g.disc[ix])});
+    row=row.concat([g.role,g.won,g.n,g.pcList]);
+    lines.push(row.map(function(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(","));
+  });
+  var blob=new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="physioinq-recruitment-targets.csv";a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
+});
 $("#campMin").addEventListener("change",function(){S.campMin=parseInt(this.value,10);renderPaid(CUR.idx)});
 $("#campScope").addEventListener("change",function(){S.campScope=this.value;renderPaid(CUR.idx)});
 
