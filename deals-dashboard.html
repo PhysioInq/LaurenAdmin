@@ -460,6 +460,22 @@
           <div class="frow"><button class="btn" id="btnAds2">Load campaign report</button><button class="btn hidden" id="btnAdsClear">Remove</button></div>
         </div>
         <p class="desc" id="adsStatus">No spend loaded. Add a campaign report and this dashboard will show cost per enquiry and cost per booking for every campaign below.</p>
+        <details class="howto">
+          <summary>Exactly what to export, and how</summary>
+          <div class="body">
+            <p><b>What the file needs.</b> One row per campaign per month, with these columns — any order, any extra columns ignored:</p>
+            <dl class="defs">
+              <dt>Campaign</dt><dd>Required. Must be the campaign name as it reaches HubSpot. Capitals and spacing don't matter.</dd>
+              <dt>Cost</dt><dd>Required. "Spend" works too.</dd>
+              <dt>Month</dt><dd>Strongly recommended. Without it the same total spend is used no matter which period you filter to. "Week", "Day" and "Date" work as well.</dd>
+              <dt>Clicks, Impr., Conversions</dt><dd>Optional, read if present.</dd>
+            </dl>
+            <p><b>Google Ads.</b> Campaigns → Campaigns. Set the date range to match the period you want. Segment → Time → Month. Check the campaign status filter includes paused and removed campaigns, or last year's spend goes missing. Then the download icon above the table → CSV.</p>
+            <p><b>Microsoft Advertising.</b> Reports → Campaign performance (or the download button on the Campaigns grid). Add Month as a time breakdown, same date range, then export as CSV.</p>
+            <p><b>Loading both.</b> Load one file, then the other — you'll be asked whether to add it to what's already there or replace it. Choose <b>add</b> for the second account.</p>
+            <p>Spend stays in your browser. It is never uploaded, and it isn't included if you send this file to someone else.</p>
+          </div>
+        </details>
         <div class="kv hidden" id="adsKv"></div>
       </div>
       <div class="card">
@@ -1219,6 +1235,16 @@ function buildFromObjects(objs){
 /* ---- Google / Microsoft Ads campaign report ---- */
 function normCamp(s){return String(s||"").toLowerCase().replace(/\s+/g," ").trim()}
 function loosCamp(s){return normCamp(s).replace(/[^a-z0-9]/g,"")}
+function adsDayOf(v){
+  if(!v)return null;
+  var m=String(v).match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/);
+  var dt=null;
+  if(m)dt=new Date(+m[1],+m[2]-1,m[3]?+m[3]:1);
+  else{var t=Date.parse(String(v)+(/^[A-Za-z]+\s+\d{4}$/.test(String(v).trim())?" 1":""));if(!isNaN(t))dt=new Date(t)}
+  if(!dt||isNaN(dt))return null;
+  return Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-
+    new Date(D.epoch.getFullYear(),D.epoch.getMonth(),D.epoch.getDate()))/86400000);
+}
 function parseAds(text){
   var rows=parseCSV(text);
   if(rows.length<2)throw new Error("That file has no rows.");
@@ -1246,31 +1272,61 @@ function parseAds(text){
   var cClicks=find([/^clicks$/,/^clicks/]);
   var cImpr=find([/^impr/,/impressions/]);
   var cConv=find([/^conversions$/,/^conv\./,/^conversions/]);
+  var cDate=find([/^month$/,/^week$/,/^day$/,/^date$/,/^month of year$/,/^week starting/]);
   if(!cName)throw new Error("Could not find a campaign-name column.");
   if(!cCost)throw new Error("Could not find a cost/spend column.");
   function num(v){var x=parseFloat(String(v||"").replace(/[^0-9.\-]/g,""));return isNaN(x)?0:x}
-  var out=[],seen={};
+  var out=[],seen={},dated=false;
   objs.forEach(function(o){
     var nm=o[cName];if(!nm||/^total/i.test(nm))return;
-    var k=normCamp(nm);
-    if(!seen[k]){seen[k]={name:nm,cost:0,clicks:0,impr:0,conv:0};out.push(seen[k])}
+    var day=cDate?adsDayOf(o[cDate]):null;
+    if(day!=null)dated=true;
+    var k=normCamp(nm)+"\u0001"+(day==null?"":day);
+    if(!seen[k]){seen[k]={name:nm,d:day,cost:0,clicks:0,impr:0,conv:0};out.push(seen[k])}
     seen[k].cost+=num(o[cCost]);
     if(cClicks)seen[k].clicks+=num(o[cClicks]);
     if(cImpr)seen[k].impr+=num(o[cImpr]);
     if(cConv)seen[k].conv+=num(o[cConv]);
   });
   if(!out.length)throw new Error("No campaign rows found.");
-  return reviveAds({rows:out,from:null,to:null});
+  return reviveAds({rows:out,dated:dated});
 }
 function reviveAds(a){
   a.byNorm=new Map();a.byLoose=new Map();
-  a.rows.forEach(function(r){a.byNorm.set(normCamp(r.name),r);a.byLoose.set(loosCamp(r.name),r)});
+  a.dated=a.rows.some(function(r){return r.d!=null});
+  function push(m,k,r){var l=m.get(k);if(!l){l=[];m.set(k,l)}l.push(r)}
+  a.rows.forEach(function(r){push(a.byNorm,normCamp(r.name),r);push(a.byLoose,loosCamp(r.name),r)});
   a.total=a.rows.reduce(function(s,r){return s+r.cost},0);
+  var ds=a.rows.map(function(r){return r.d}).filter(function(d){return d!=null});
+  a.minD=ds.length?Math.min.apply(null,ds):null;
+  a.maxD=ds.length?Math.max.apply(null,ds):null;
+  a.names=new Set();a.undated=new Set();
+  a.rows.forEach(function(r){a.names.add(normCamp(r.name));if(r.d==null)a.undated.add(normCamp(r.name))});
   return a;
+}
+function adsBounds(){return periodBounds()}
+function sumEntries(list){
+  if(!list||!list.length)return null;
+  var b=adsBounds(),out={name:list[0].name,cost:0,clicks:0,impr:0,conv:0,rows:0};
+  for(var i=0;i<list.length;i++){
+    var r=list[i];
+    if(r.d!=null&&(r.d<b.from||r.d>b.to))continue;
+    out.cost+=r.cost;out.clicks+=r.clicks;out.impr+=r.impr;out.conv+=r.conv;out.rows++;
+  }
+  return out.rows?out:null;
 }
 function adsFor(campLabel){
   if(!ADS)return null;
-  return ADS.byNorm.get(normCamp(campLabel))||ADS.byLoose.get(loosCamp(campLabel))||null;
+  return sumEntries(ADS.byNorm.get(normCamp(campLabel))||ADS.byLoose.get(loosCamp(campLabel)));
+}
+function adsTotalInPeriod(){
+  if(!ADS)return 0;
+  var b=adsBounds(),t=0;
+  ADS.rows.forEach(function(r){if(r.d==null||(r.d>=b.from&&r.d<=b.to))t+=r.cost});
+  return t;
+}
+function mergeAds(a,b){
+  return reviveAds({rows:a.rows.concat(b.rows)});
 }
 
 /* ==========================================================================
@@ -1796,12 +1852,20 @@ function renderAdsCard(sub){
     var a=adsFor(c.label);
     if(a){matched++;mcost+=a.cost;mleads+=c.n;mwon+=c.won;matchedNames.add(normCamp(a.name))}
   });
-  var unmatched=ADS.rows.filter(function(r){return !matchedNames.has(normCamp(r.name))});
-  var ucost=unmatched.reduce(function(s,r){return s+r.cost},0);
-  st.innerHTML="Loaded <b>"+fmtN(ADS.rows.length)+"</b> campaigns, <b>"+fmtMoney(ADS.total)+
-    "</b> total spend. Matched to <b>"+fmtN(matched)+"</b> campaigns in the current filter."+
-    (unmatched.length?" <b>"+fmtN(unmatched.length)+"</b> ad campaigns ("+fmtMoney(ucost)+
-     ") had no enquiries in this slice — either they produced nothing, or the campaign name in HubSpot differs.":"");
+  var b=adsBounds(),periodTotal=adsTotalInPeriod();
+  var unmatchedNames=[];
+  ADS.names.forEach(function(nm){if(!matchedNames.has(nm))unmatchedNames.push(nm)});
+  var ucost=Math.max(0,periodTotal-mcost);
+  var fdate=function(day){return dayToDate(day).toLocaleDateString("en-AU",{month:"short",year:"numeric"})};
+  st.innerHTML="Loaded <b>"+fmtN(ADS.names.size)+"</b> campaigns"+
+    (ADS.dated?" with month-by-month spend covering <b>"+fdate(Math.max(ADS.minD,D.minDay))+" – "+fdate(Math.min(ADS.maxD,D.maxDay))+"</b>":"")+
+    ". <b>"+fmtMoney(periodTotal)+"</b> of spend in the period you're looking at, matched to <b>"+
+    fmtN(matched)+"</b> campaigns."+
+    (unmatchedNames.length?" <b>"+fmtN(unmatchedNames.length)+"</b> ad campaigns ("+fmtMoney(ucost)+
+     ") produced no enquiries in this slice — either they genuinely didn't, or the campaign name in HubSpot differs.":"")+
+    (ADS.undated.size?' <b style="color:var(--crit-ink)">'+(ADS.undated.size===ADS.names.size?"This report has no date column":
+      fmtN(ADS.undated.size)+" of these campaigns came in without a date column")+
+      '</b>, so their full spend is counted whatever period you filter to. Re-export segmented by month for period-accurate costs.':"");
   kv.classList.remove("hidden");$("#btnAdsClear").classList.remove("hidden");
   kv.innerHTML=[
     ["Matched spend",fmtMoney(mcost)],["Enquiries",fmtN(mleads)],["Bookings",fmtN(mwon)],
@@ -2329,7 +2393,11 @@ function useBuiltIn(){
 })});
 $("#fileAds").addEventListener("change",function(){
   readFile(this,function(txt){
-    ADS=parseAds(txt);
+    var incoming=parseAds(txt);
+    if(ADS&&ADS.rows.length){
+      var add=confirm("Add this spend to what's already loaded?\n\nOK = add it (use this for a second account, e.g. Microsoft Advertising).\nCancel = replace what's loaded.");
+      ADS=add?mergeAds(ADS,incoming):incoming;
+    } else ADS=incoming;
     try{localStorage.setItem("pi_ads",JSON.stringify({rows:ADS.rows}))}catch(e){}
     applyFilters();
   });

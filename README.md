@@ -97,10 +97,17 @@ suburb, postcode, campaign and keyword. Every chart has a **Table** toggle, and
 - **Newer deals** — export the same HubSpot view (same columns) and use
   *Load newer export*. The file is read in your browser and remembered on that
   computer only. *Method → Go back to the original export* undoes it.
-- **Ad spend** — export **Campaigns → Cost** from Google Ads (and Microsoft
-  Advertising) as CSV and use *Google Ads data*. Campaigns are matched to
-  enquiries by campaign name, so the names in Google Ads need to match what
-  lands in HubSpot's "original source drill-down 1".
+- **Ad spend** — use *Google Ads data*. The file needs a **Campaign** column and
+  a **Cost** (or Spend) column; add a **Month** segment so costs follow the period
+  filter, and include **Clicks / Impressions / Conversions** if you have them.
+  In Google Ads: Campaigns → Campaigns, set the date range, Segment → Time →
+  Month, make sure paused and removed campaigns aren't filtered out, then
+  download as CSV. Microsoft Advertising is the same idea via Reports →
+  Campaign performance. Load one file then the other and choose *add* when
+  prompted to keep both accounts. Campaigns are matched by name, so names in the
+  ad account need to match what lands in HubSpot's "original source
+  drill-down 1". Spend is stored in your browser only and is never included
+  when you send the dashboard file to someone else.
 
 ## Unmet demand (the Recruitment tab)
 
