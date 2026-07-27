@@ -684,8 +684,10 @@ var FILTER_DIMS=[
 function periodBounds(){
   var to=D.maxDay,from=D.minDay;
   if(S.period==="custom"){
-    if(S.from!=null)from=Math.max(from,S.from);
-    if(S.to!=null)to=Math.min(to,S.to);
+    var a=S.from,z=S.to;
+    if(a!=null&&z!=null&&a>z){var t=a;a=z;z=t}   // dates entered back to front
+    if(a!=null)from=Math.max(from,a);
+    if(z!=null)to=Math.min(to,z);
   }else{
     var days=parseInt(S.period,10);
     if(days<365)from=Math.max(D.minDay,D.maxDay-days+1);
@@ -808,6 +810,14 @@ document.addEventListener("scroll",hideTip,true);
 /* ==========================================================================
    6. CHART PRIMITIVES
    ========================================================================== */
+function emptyState(host,msg){
+  host.innerHTML="";
+  var d=el("div");
+  d.style.cssText="padding:26px 8px;text-align:center;color:var(--ink-3);font-size:13px";
+  d.textContent=msg||"Nothing to show for this slice — try widening the filters.";
+  host.appendChild(d);
+  return d;
+}
 function chartFrame(host,h){
   host.innerHTML="";
   var w=Math.max(320,host.clientWidth||host.parentNode.clientWidth||700);
@@ -1041,6 +1051,7 @@ function scatterChart(host,pts,opt){
 /* --- heatmap --- */
 function heatmap(host,rowsL,colsL,cells,opt){
   opt=opt||{};
+  if(!rowsL.length||!colsL.length){emptyState(host,"No enquiries match the current filters, so there is nothing to cross.");return}
   host.innerHTML="";
   var w=Math.max(320,host.clientWidth||700);
   var labelW=Math.min(190,Math.max(110,w*0.2));
@@ -1453,7 +1464,7 @@ function saveAds(){
   if(!ADS){try{localStorage.removeItem("pi_ads")}catch(e){}return}
   var dis=[];ADS.disabled.forEach(function(x){dis.push(x)});
   var ex=[];ADS.exAcct.forEach(function(x){ex.push(x)});
-  try{localStorage.setItem("pi_ads",JSON.stringify({rows:ADS.rows,disabled:dis,exAcct:ex}))}
+  try{localStorage.setItem("pi_ads",JSON.stringify({rows:ADS.rows,disabled:dis,exAcct:ex,skipped:ADS.skipped||0}))}
   catch(e){alert("The spend data is loaded, but it's too large for this browser to remember — you'll need to load it again next time.")}
 }
 
@@ -1662,6 +1673,7 @@ function renderTrends(idx){
         {k:"cr",n:"Conversion",get:function(r){return r.cr==null?"–":fmtPct(r.cr)},sortable:false}],ms);
       return;
     }
+    if(!ms.length){emptyState(host,"No enquiries in this slice.");return}
     columnChart(host,ms.map(function(m){return {label:m.label,v:m.n,s:m}}),{
       tip:function(d){return [["Enquiries",fmtN(d.s.n)],["Booked",fmtN(d.s.won)],
         ["Conversion",d.s.cr==null?"–":fmtPct(d.s.cr)],["Still open",fmtN(d.s.open)]]}
@@ -1684,6 +1696,7 @@ function renderTrends(idx){
         {k:"open",n:"Still open",get:function(r){return fmtN(r.open)},sortable:false}],ms);
       return;
     }
+    if(!ms.length){emptyState(host,"No enquiries in this slice.");return}
     lineChart(host,ms.map(function(m){return {label:m.label,v:m.cr,s:m}}),{
       max:1,refline:overall.cr,bandFrom:settleIdx,bandLabel:"recent — still settling",
       tip:function(d){return [["Conversion",d.s.cr==null?"–":fmtPct(d.s.cr)],["Booked",fmtN(d.s.won)],
@@ -1728,6 +1741,7 @@ function mixOverTime(idx,ms,dim,chartId,legendId){
       renderTable(t,cols,ms.map(function(m,i){return {label:m.label,i:i}}));
       return;
     }
+    if(!ms.length||!series.length){emptyState(host,"No enquiries in this slice.");return}
     stackedShare(host,ms.map(function(m){return m.label}),series,{height:230});
   });
 }
@@ -1811,6 +1825,9 @@ function renderMatrix(idx){
           metric==="won"?function(c){return fmtN(c.won)}:
           function(c){return c.geoRate==null?"–":Math.round(c.geoRate*100)+"%"};
   setView("matrix",function(host,mode){
+    if(!rowsL.length||!colsL.length){
+      emptyState(host,"No enquiries match the current filters, so there is nothing to cross.");return;
+    }
     if(mode==="table"){
       var t=el("table");host.appendChild(t);
       var cols=[{k:"l",n:dimName(rd),get:function(r){return r.l},sortable:false}];
@@ -1847,6 +1864,7 @@ function renderLosses(idx){
         {k:"p",n:"Share",get:function(r){return fmtPct(r.v/(lost||1),1)},sortable:false}],rows);
       return;
     }
+    if(!top.length){emptyState(host,"No lost enquiries in this slice — nothing to explain.");return}
     barList(host,top.map(function(r){
       return {label:r.label,v:r.v,color:D.GEO.has(r.code)?colGeo:colBase,
         tip:[["Lost enquiries",fmtN(r.v)],["Share of losses",fmtPct(r.v/(lost||1),1)]]};
@@ -2598,7 +2616,10 @@ $("#fileDeals").addEventListener("change",function(){
     var nd=buildFromObjects(objs);
     D=nd;LOADED=iso(new Date());
     if(ADS)rebuildAdsIndex();
-    try{localStorage.setItem("pi_deals",JSON.stringify(serialise(nd)))}catch(e){}
+    try{localStorage.setItem("pi_deals",JSON.stringify(serialise(nd)))}
+    catch(e){alert("Loaded "+fmtN(nd.N)+" enquiries, but this browser can't remember them for next time — "+
+      "there isn't enough storage left. The dashboard works normally now; you'll just need to load the file again "+
+      "next time you open it. Removing the ad spend under Paid channels frees up room.")}
     S.sel={state:new Set(),disc:new Set(),src:new Set(),rel:new Set(),fund:new Set(),deliv:new Set(),plat:new Set()};
     buildMultiSelects();applyFilters();
     alert("Loaded "+fmtN(nd.N)+" enquiries covering "+nd.range());
@@ -2646,6 +2667,7 @@ $("#btnAdsClear").addEventListener("click",function(){
   ADS=null;saveAds();applyFilters();
 });
 $("#btnCsv").addEventListener("click",function(){
+  if(!CUR.idx.length){alert("There are no enquiries in the current view to export.");return}
   var F=D.F,hdr=["Create date","State","Suburb","Postcode","Discipline","Relationship","Funding","Delivery",
     "Original source","Latest source","Campaign","Keyword","Deal stage","Outcome","Loss reason","Days to close","Owner"];
   var lines=[hdr.join(",")];
@@ -2688,7 +2710,7 @@ $("#fFrom").addEventListener("change",function(){S.from=dateToDay(new Date(this.
 $("#fTo").addEventListener("change",function(){S.to=dateToDay(new Date(this.value+"T00:00:00"));applyFilters()});
 var qt=null;
 $("#fSearch").addEventListener("input",function(){
-  var v=this.value;clearTimeout(qt);qt=setTimeout(function(){S.q=v;applyFilters()},220);
+  var v=this.value.trim();clearTimeout(qt);qt=setTimeout(function(){S.q=v;applyFilters()},220);
 });
 $("#fMature").addEventListener("change",function(){S.mature=this.checked;applyFilters()});
 $("#fReset").addEventListener("click",function(){
