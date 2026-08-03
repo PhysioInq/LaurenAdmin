@@ -308,6 +308,16 @@
   .mtg-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; flex-wrap: wrap; }
   .mtg-meta .next { font-size: 13px; color: var(--ink-2); font-weight: 600; }
   .mtg-meta select { width: auto; padding: 5px 9px; font-size: 12.5px; }
+  .mtg-sched { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+  .mtg-sched input[type="date"] { width: auto; padding: 5px 9px; font-size: 12.5px; }
+  .todo-add-row #mtg-item-input { flex: 1 1 150px; }
+  .todo-add-row #mtg-item-link { flex: 1 1 120px; }
+  .agenda-item .ag-txt-link { flex: 1; font-size: 14px; color: var(--ink); text-decoration: none; }
+  .agenda-item .ag-txt-link:hover { color: var(--accent-ink); text-decoration: underline; }
+  .agenda-item.covered .ag-txt-link { text-decoration: line-through; color: var(--ink-3); }
+  .agenda-item .ag-link { background: none; border: none; color: var(--ink-3); font-size: 12.5px; padding: 2px 6px; border-radius: 6px; align-self: center; }
+  .agenda-item .ag-link:hover { color: var(--accent-ink); background: var(--accent-soft); }
+  .agenda-item .ag-link.has { color: var(--accent-ink); }
   .agenda-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
   .agenda-item:last-child { border-bottom: none; }
   .agenda-item .txt { flex: 1; font-size: 14px; }
@@ -503,7 +513,7 @@
     <h3>Using your panels</h3>
     <ul>
       <li><strong>To-Do List:</strong> type a task and (optionally) pick a due date. The list sorts by what's due soonest and flags anything <em>overdue</em>, <em>today</em> or <em>this week</em>.</li>
-      <li><strong>Meeting Agendas:</strong> tap a meeting tab (Team Meeting, or your 1:1s with Jonathan, Pat, Robyn, Marty) and jot points as they come to you. Set a weekly day and it shows the next date. Press <strong>Copy agenda</strong> to drop it into an email or Teams, and tick items off as you cover them. Use <strong>＋ New</strong> for any other meeting.</li>
+      <li><strong>Meeting Agendas:</strong> tap a meeting tab (Team Meeting, or your 1:1s with Jonathan, Pat, Robyn, Marty) and jot points as they come to you. Choose how often it repeats — <strong>Weekly, Fortnightly, Monthly</strong> or no set schedule — and pick the next date; it rolls forward on its own. Add a <strong>link</strong> to any agenda point with the 🔗 button (handy for a doc you'll discuss). Press <strong>Copy agenda</strong> to drop it into an email or Teams, tick items off as you cover them, and use <strong>＋ New</strong> for any other meeting.</li>
       <li><strong>Post-Meeting Actions:</strong> paste your notes or a Copilot/Teams transcript (or <strong>Upload</strong> a <code>.txt</code>/<code>.vtt</code> file) and click <strong>Find actions</strong>. Add each one to your to-do list or delegate it to a team member in one click. For the smartest read, use <strong>Extract with Claude</strong>.</li>
     </ul>
     <h3 style="margin-top:16px;">Getting your Copilot transcript out of Teams</h3>
@@ -1102,18 +1112,45 @@
   });
 
   /* ================= MEETING AGENDAS ================= */
-  var DAY_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  var FREQS = { weekly: "Weekly", fortnightly: "Fortnightly", monthly: "Monthly", none: "No set schedule" };
   var meetings = load(LS.meetings, [
-    { id: uid(), name: "Team Meeting", day: 4, items: [
-      { id: uid(), text: "Wins & shout-outs from the week", done: false },
-      { id: uid(), text: "Client numbers / bookings update", done: false }
+    { id: uid(), name: "Team Meeting", freq: "weekly", next: iso(nextWeekday(4)), items: [
+      { id: uid(), text: "Wins & shout-outs from the week", done: false, link: "" },
+      { id: uid(), text: "Client numbers / bookings update", done: false, link: "" }
     ] },
-    { id: uid(), name: "1:1 — Jonathan", day: null, items: [] },
-    { id: uid(), name: "1:1 — Pat", day: null, items: [] },
-    { id: uid(), name: "1:1 — Robyn", day: null, items: [] },
-    { id: uid(), name: "1:1 — Marty", day: null, items: [] }
+    { id: uid(), name: "1:1 — Jonathan", freq: "none", next: "", items: [] },
+    { id: uid(), name: "1:1 — Pat", freq: "none", next: "", items: [] },
+    { id: uid(), name: "1:1 — Robyn", freq: "none", next: "", items: [] },
+    { id: uid(), name: "1:1 — Marty", freq: "none", next: "", items: [] }
   ]);
+  // Migrate older saved meetings (weekly-only "day" model) to freq/next, and add item links.
+  (function migrateMeetings() {
+    var changed = false;
+    meetings.forEach(function (m) {
+      if (m.freq === undefined) {
+        if (typeof m.day === "number") { m.freq = "weekly"; m.next = iso(nextWeekday(m.day)); }
+        else { m.freq = "none"; m.next = ""; }
+        delete m.day; changed = true;
+      }
+      (m.items || []).forEach(function (it) { if (it.link === undefined) { it.link = ""; changed = true; } });
+    });
+    if (changed) save(LS.meetings, meetings);
+  })();
   var selMtg = load(LS.mtgSel, null);
+  // Next occurrence: roll the stored date forward by the cadence until it's today or later.
+  function nextMeetingDate(m) {
+    if (m.freq === "none" || !m.next) return null;
+    var d = parseDate(m.next), today = todayMid(), guard = 0, moved = false;
+    while (d < today && guard++ < 600) {
+      if (m.freq === "weekly") d.setDate(d.getDate() + 7);
+      else if (m.freq === "fortnightly") d.setDate(d.getDate() + 14);
+      else if (m.freq === "monthly") d.setMonth(d.getMonth() + 1);
+      else break;
+      moved = true;
+    }
+    if (moved) { m.next = iso(d); save(LS.meetings, meetings); }
+    return d;
+  }
   function currentMtg() {
     return meetings.filter(function (x) { return x.id === selMtg; })[0] || meetings[0] || null;
   }
@@ -1132,7 +1169,7 @@
     add.addEventListener("click", function () {
       var name = prompt("Name this meeting (e.g. 1:1 — Sam, or Finance catch-up):");
       if (!name || !name.trim()) return;
-      var m = { id: uid(), name: name.trim(), day: null, items: [] };
+      var m = { id: uid(), name: name.trim(), freq: "none", next: "", items: [] };
       meetings.push(m); selMtg = m.id; save(LS.meetings, meetings); save(LS.mtgSel, selMtg); renderMeetings();
     });
     wrap.appendChild(add);
@@ -1140,22 +1177,33 @@
   function renderMtgPanel() {
     var panel = $("mtg-panel"), m = currentMtg();
     if (!m) { panel.innerHTML = '<div class="empty">No meetings yet — add one above.</div>'; $("mtg-count").textContent = "0 items"; return; }
-    var nd = nextWeekday(m.day);
-    var nextTxt = nd ? "🗓️ Next: " + nd.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) : "No set day";
-    var dayOpts = '<option value="">No set day</option>' + DAY_FULL.map(function (d, i) {
-      return '<option value="' + i + '"' + (m.day === i ? " selected" : "") + '>Every ' + d + '</option>';
+    var nd = nextMeetingDate(m);
+    var nextTxt = nd ? "🗓️ Next: " + nd.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })
+                     : (m.freq === "none" ? "No set schedule" : "Pick the next date →");
+    var freqOpts = Object.keys(FREQS).map(function (k) {
+      return '<option value="' + k + '"' + (m.freq === k ? " selected" : "") + '>' + FREQS[k] + '</option>';
     }).join("");
     var itemsHtml = m.items.length ? "" : '<div class="empty">No agenda items yet — add what you want to raise.</div>';
     m.items.forEach(function (it) {
+      var txt;
+      if (it.link) {
+        var u = /^https?:\/\//i.test(it.link) ? it.link : "https://" + it.link;
+        txt = '<a class="ag-txt-link" href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(it.text) + '</a>';
+      } else {
+        txt = '<span class="txt">' + esc(it.text) + '</span>';
+      }
       itemsHtml += '<div class="agenda-item' + (it.done ? " covered" : "") + '" data-id="' + it.id + '">' +
-        '<input type="checkbox" class="check"' + (it.done ? " checked" : "") + ' aria-label="Covered">' +
-        '<span class="txt">' + esc(it.text) + '</span>' +
+        '<input type="checkbox" class="check"' + (it.done ? " checked" : "") + ' aria-label="Covered">' + txt +
+        '<button class="ag-link' + (it.link ? " has" : "") + '" title="' + (it.link ? "Change or remove link" : "Add a link") + '" aria-label="Link">🔗</button>' +
         '<button class="del" title="Remove" aria-label="Remove">×</button></div>';
     });
     panel.innerHTML =
       '<div class="mtg-meta"><span class="next">' + nextTxt + '</span>' +
-        '<select id="mtg-day" aria-label="Meeting day">' + dayOpts + '</select></div>' +
+        '<div class="mtg-sched"><select id="mtg-freq" aria-label="How often it repeats">' + freqOpts + '</select>' +
+          (m.freq === "none" ? "" : '<input type="date" id="mtg-next" aria-label="Next date" value="' + esc(m.next || "") + '">') +
+        '</div></div>' +
       '<div class="todo-add-row"><input type="text" id="mtg-item-input" placeholder="Add an agenda point…">' +
+        '<input type="text" id="mtg-item-link" placeholder="Link (optional)">' +
         '<button class="btn" id="mtg-item-add">Add</button></div>' +
       '<div id="agenda-list">' + itemsHtml + '</div>' +
       '<div class="mtg-foot"><button class="link-btn" id="mtg-copy">📋 Copy agenda</button>' +
@@ -1163,26 +1211,35 @@
         '<button class="link-btn danger" id="mtg-del">Delete meeting</button></div>';
     $("mtg-count").textContent = m.items.filter(function (i) { return !i.done; }).length + " items";
 
-    $("mtg-day").addEventListener("change", function () {
-      m.day = this.value === "" ? null : +this.value; save(LS.meetings, meetings); renderMeetings();
+    $("mtg-freq").addEventListener("change", function () {
+      m.freq = this.value; save(LS.meetings, meetings); renderMeetings();
+    });
+    if ($("mtg-next")) $("mtg-next").addEventListener("change", function () {
+      m.next = this.value; save(LS.meetings, meetings); renderMeetings();
     });
     function addItem() {
       var v = $("mtg-item-input").value.trim(); if (!v) return;
-      m.items.push({ id: uid(), text: v, done: false }); save(LS.meetings, meetings); renderMeetings();
+      m.items.push({ id: uid(), text: v, done: false, link: $("mtg-item-link").value.trim() });
+      save(LS.meetings, meetings); renderMeetings();
     }
     $("mtg-item-add").addEventListener("click", addItem);
     $("mtg-item-input").addEventListener("keydown", function (e) { if (e.key === "Enter") addItem(); });
+    $("mtg-item-link").addEventListener("keydown", function (e) { if (e.key === "Enter") addItem(); });
     Array.prototype.forEach.call(panel.querySelectorAll(".agenda-item"), function (row) {
       var id = row.getAttribute("data-id");
       var it = m.items.filter(function (x) { return x.id === id; })[0];
       row.querySelector(".check").addEventListener("change", function () { it.done = this.checked; save(LS.meetings, meetings); renderMeetings(); });
+      row.querySelector(".ag-link").addEventListener("click", function () {
+        var url = prompt("Paste a link for this agenda item (leave empty to remove):", it.link || "");
+        if (url === null) return; it.link = url.trim(); save(LS.meetings, meetings); renderMeetings();
+      });
       row.querySelector(".del").addEventListener("click", function () {
         m.items = m.items.filter(function (x) { return x.id !== id; }); save(LS.meetings, meetings); renderMeetings();
       });
     });
     $("mtg-copy").addEventListener("click", function () {
       var head = "Agenda — " + m.name + (nd ? " (" + nd.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) + ")" : "");
-      var body = m.items.map(function (i, ix) { return (ix + 1) + ". " + i.text; }).join("\n");
+      var body = m.items.map(function (i, ix) { return (ix + 1) + ". " + i.text + (i.link ? " — " + i.link : ""); }).join("\n");
       if (navigator.clipboard) navigator.clipboard.writeText(head + "\n" + (body || "(no items yet)"));
       toast("Agenda copied — paste into an email or Teams");
     });
