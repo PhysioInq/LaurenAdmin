@@ -256,7 +256,7 @@
     <div class="frow">
       <span class="fl">Period</span>
       <select id="fPeriod" aria-label="Period">
-        <option value="365">All 365 days</option>
+        <option value="all">Everything</option>
         <option value="30">Last 30 days</option>
         <option value="90">Last 90 days</option>
         <option value="180">Last 180 days</option>
@@ -663,7 +663,7 @@ function labelOf(dim,code){var l=dim==="month"?D.monthLabels[code]:D.DICT[dim][c
    2. STATE
    ========================================================================== */
 var S={
-  period:"365", from:null, to:null, q:"", mature:false, tab:"trends",
+  period:"all", from:null, to:null, q:"", mature:false, tab:"trends",
   sel:{state:new Set(),disc:new Set(),src:new Set(),rel:new Set(),fund:new Set(),deliv:new Set(),plat:new Set()},
   segDim:"src", segMin:25, segSort:{k:"n",dir:-1},
   mxRow:"state", mxCol:"disc", mxMetric:"cr",
@@ -688,9 +688,9 @@ function periodBounds(){
     if(a!=null&&z!=null&&a>z){var t=a;a=z;z=t}   // dates entered back to front
     if(a!=null)from=Math.max(from,a);
     if(z!=null)to=Math.min(to,z);
-  }else{
+  }else if(S.period!=="all"){
     var days=parseInt(S.period,10);
-    if(days<365)from=Math.max(D.minDay,D.maxDay-days+1);
+    if(days>0)from=Math.max(D.minDay,D.maxDay-days+1);
   }
   if(S.mature)to=Math.min(to,D.maxDay-30);
   return {from:from,to:to};
@@ -2780,9 +2780,9 @@ $("#fSearch").addEventListener("input",function(){
 });
 $("#fMature").addEventListener("change",function(){S.mature=this.checked;applyFilters()});
 $("#fReset").addEventListener("click",function(){
-  S.period="365";S.from=S.to=null;S.q="";S.mature=false;
+  S.period="all";S.from=S.to=null;S.q="";S.mature=false;
   FILTER_DIMS.forEach(function(f){S.sel[f.k].clear()});
-  $("#fPeriod").value="365";$("#fSearch").value="";$("#fMature").checked=false;
+  $("#fPeriod").value="all";$("#fSearch").value="";$("#fMature").checked=false;
   $("#fFrom").classList.add("hidden");$("#fTo").classList.add("hidden");
   applyFilters();
 });
@@ -2835,6 +2835,8 @@ window.addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(funct
    17. GO
    ========================================================================== */
 try{var sa=localStorage.getItem("pi_ads");if(sa)ADS=reviveAds(JSON.parse(sa))}catch(e){ADS=null}
+(function(){var o=$("#fPeriod").options[0];
+  o.textContent="Everything ("+fmtN(D.maxDay-D.minDay+1)+" days)"})();
 buildTabs();buildMultiSelects();wireViewToggles();applyFilters();
 })();
 
