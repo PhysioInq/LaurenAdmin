@@ -6,7 +6,7 @@ and they open in your browser.
 | File | What it's for |
 |---|---|
 | `index.html` | **Personal admin** — to-dos, deadlines, delegation, email templates |
-| `deals-dashboard.html` | **Enquiry & conversion analytics** — 365 days of Physio Inq deals, cut by location, discipline, source and referrer type |
+| `deals-dashboard.html` | **Enquiry & conversion analytics** — 12 months of Physio Inq deals, cut by location, discipline, source and referrer type |
 
 ---
 
@@ -58,7 +58,7 @@ this can be upgraded to show your live emails and appointments.
 # Enquiry & Conversion Dashboard
 
 `deals-dashboard.html` — built from the HubSpot *deals by source* export
-(26 July 2025 – 25 July 2026, 15,535 enquiries). Open it in any browser; all the
+(26 July 2025 – 31 July 2026, 15,858 enquiries). Open it in any browser; all the
 data is inside the file and nothing is sent anywhere.
 
 ## What it answers
@@ -95,8 +95,12 @@ suburb, postcode, campaign and keyword. Every chart has a **Table** toggle, and
 ## Loading your own data
 
 - **Newer deals** — export the same HubSpot view (same columns) and use
-  *Load newer export*. The file is read in your browser and remembered on that
-  computer only. *Method → Go back to the original export* undoes it.
+  *Load newer export*. A **partial export works**: load just last month and the
+  dashboard offers to add it to what's already there, replacing only the dates
+  the file covers. That also picks up enquiries that have since been resolved —
+  241 of July's did between the two exports. The file is read in your browser and
+  remembered on that computer only. *Method → Go back to the original export*
+  undoes it.
 - **Ad spend** — use *Google Ads data*. The file needs a **Campaign** column and
   a **Cost** (or Spend) column; add a **Month** segment so costs follow the period
   filter, and include **Clicks / Impressions / Conversions** if you have them.
@@ -125,8 +129,9 @@ disciplines appears under both — the columns add up to more than the total.
 
 ## What ad spend can and can't tell you
 
-Spend is recorded per campaign per month, so it can be split by **time** but not by
-state, discipline or funding — a campaign has one cost however its enquiries are
+Spend is recorded per campaign per month, so it can be split by **time** — a period
+shorter than a month gets that month's spend apportioned by the days that overlap —
+but not by state, discipline or funding — a campaign has one cost however its enquiries are
 spread. Whenever one of those filters is on, the dashboard hides cost per enquiry
 and cost per booking rather than showing a figure that can't be right.
 
