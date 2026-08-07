@@ -6,9 +6,10 @@ Branded documents produced for Physio Inq / Pinq Care.
 
 `Care About Referrals - Intake Process.docx` — process document for Charlotte (Intake) covering
 Care About aged care referrals arriving into the `carepartners@physioinq.com.au` shared inbox:
-what arrives, the one-hour diary transfer standard, HubSpot deal creation, and exception handling.
+what arrives, HubSpot deal creation (CAREINQ pipeline, referral partner stage), booking into
+Jahari's or Tom's diary, orange referral checks, and exception handling.
 
-Pinq Care branding. Status: Draft — the magenta placeholder fields need filling before it goes out.
+Pinq Care branding. Status: Draft.
 
 ### Regenerating it
 
