@@ -205,6 +205,14 @@
   .task .tt { cursor: pointer; }
   .task .tt:hover { color: var(--accent-ink); }
   .task-detail { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .todo .grip { cursor: grab; color: var(--ink-3); font-size: 14px; line-height: 1; align-self: center; user-select: none; padding: 0 1px; }
+  .todo .grip:hover { color: var(--accent-ink); }
+  .todo .grip:active { cursor: grabbing; }
+  .todo-wrap.dragging { opacity: .5; }
+  #deleg-card.drop-active { outline: 2px dashed var(--accent); outline-offset: -5px; }
+  #deleg-card.drop-active .body { background: var(--accent-soft); }
+  .send-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .send-row select { flex: 1 1 130px; width: auto; }
   .todo .tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .2px; }
   .del {
     background: none; border: none; color: var(--ink-3); font-size: 17px; line-height: 1;
@@ -375,8 +383,8 @@
   <!-- Summary -->
   <section class="stats">
     <div class="stat"><span class="stripe a"></span><div class="n num" id="s-todo">0</div><div class="l">To-dos due today</div></div>
-    <div class="stat"><span class="stripe c"></span><div class="n num" id="s-over">0</div><div class="l">Overdue deadlines</div></div>
-    <div class="stat"><span class="stripe w"></span><div class="n num" id="s-week">0</div><div class="l">Deadlines this week</div></div>
+    <div class="stat"><span class="stripe c"></span><div class="n num" id="s-over">0</div><div class="l">Overdue to-dos</div></div>
+    <div class="stat"><span class="stripe w"></span><div class="n num" id="s-week">0</div><div class="l">Due this week</div></div>
     <div class="stat"><span class="stripe s"></span><div class="n num" id="s-deleg">0</div><div class="l">Tasks with the team</div></div>
   </section>
 
@@ -414,6 +422,33 @@
           <div id="mtg-panel"></div>
         </div>
       </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <!-- Delegation (also a drop target for to-dos) -->
+      <div class="card" id="deleg-card">
+        <div class="head">
+          <h2>👥 Team Delegation</h2>
+          <span class="badge" id="tk-count">0 active</span>
+        </div>
+        <div class="body">
+          <p class="hint" style="margin:0 0 11px;">Drag a to-do here by its <strong>⠿</strong> handle, or open a to-do and press <strong>→ Delegate</strong>.</p>
+          <div id="tk-list"></div>
+          <details class="adder">
+            <summary>＋ Delegate a task</summary>
+            <div class="adder-box">
+              <div class="field"><label>Task</label><input type="text" id="tk-title" placeholder="e.g. Prepare new-client welcome packs"></div>
+              <div class="grid2">
+                <div class="field"><label>Assign to</label><input type="text" id="tk-who" placeholder="Team member name"></div>
+                <div class="field"><label>Due (optional)</label><input type="date" id="tk-due"></div>
+              </div>
+              <div class="field"><label>Note (optional)</label><input type="text" id="tk-note" placeholder="Any detail or link"></div>
+              <button class="btn" id="tk-add">Add & assign</button>
+            </div>
+          </details>
+        </div>
+      </div>
 
       <!-- Email helper -->
       <div class="card">
@@ -444,83 +479,13 @@
         </div>
       </div>
     </div>
-
-    <!-- RIGHT COLUMN -->
-    <div style="display:flex; flex-direction:column; gap:18px;">
-      <!-- Timeline -->
-      <div class="card">
-        <div class="head">
-          <h2>🗓️ Deadline Timeline</h2>
-          <span class="badge" id="dl-count">0</span>
-        </div>
-        <div class="body">
-          <ul class="list" id="dl-list"></ul>
-          <details class="adder">
-            <summary>＋ Add a deadline</summary>
-            <div class="adder-box">
-              <div class="field"><label>What's due</label><input type="text" id="dl-title" placeholder="e.g. Submit monthly compliance report"></div>
-              <div class="grid2">
-                <div class="field"><label>Date</label><input type="date" id="dl-date"></div>
-                <div class="field"><label>Owner (optional)</label><input type="text" id="dl-owner" placeholder="You / team member"></div>
-              </div>
-              <button class="btn" id="dl-add">Add deadline</button>
-            </div>
-          </details>
-        </div>
-      </div>
-
-      <!-- Delegation -->
-      <div class="card">
-        <div class="head">
-          <h2>👥 Team Delegation</h2>
-          <span class="badge" id="tk-count">0 active</span>
-        </div>
-        <div class="body">
-          <div id="tk-list"></div>
-          <details class="adder">
-            <summary>＋ Delegate a task</summary>
-            <div class="adder-box">
-              <div class="field"><label>Task</label><input type="text" id="tk-title" placeholder="e.g. Prepare new-client welcome packs"></div>
-              <div class="grid2">
-                <div class="field"><label>Assign to</label><input type="text" id="tk-who" placeholder="Team member name"></div>
-                <div class="field"><label>Due (optional)</label><input type="date" id="tk-due"></div>
-              </div>
-              <div class="field"><label>Note (optional)</label><input type="text" id="tk-note" placeholder="Any detail or link"></div>
-              <button class="btn" id="tk-add">Add & assign</button>
-            </div>
-          </details>
-        </div>
-      </div>
-
-      <!-- Post-meeting actions -->
-      <div class="card">
-        <div class="head"><h2>✅ Post-Meeting Actions</h2></div>
-        <div class="body">
-          <p class="hint" style="margin:0 0 10px;">Paste your meeting notes or a Copilot/Teams transcript, then pull out the action items.</p>
-          <textarea id="tr-input" placeholder="Paste transcript or notes here…" style="min-height:110px;"></textarea>
-          <div class="email-actions">
-            <button class="btn" id="tr-find">Find actions</button>
-            <button class="btn ghost" id="tr-file">Upload .txt / .vtt</button>
-            <button class="btn ghost" id="tr-claude">Extract with Claude ↗</button>
-          </div>
-          <div id="tr-results"></div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <footer class="tips">
     <h3>Using your panels</h3>
     <ul>
-      <li><strong>To-Do List:</strong> type a task and (optionally) pick a due date. The list sorts by what's due soonest and flags anything <em>overdue</em>, <em>today</em> or <em>this week</em>.</li>
+      <li><strong>To-Do List:</strong> type a task and (optionally) pick a due date. The list sorts by what's due soonest and flags anything <em>overdue</em>, <em>today</em> or <em>this week</em>. Open a task (click it) to edit it, add notes or docs, <strong>send it to a meeting agenda</strong>, or <strong>delegate</strong> it. You can also <strong>drag a to-do by its ⠿ handle straight onto Team Delegation</strong>.</li>
       <li><strong>Meeting Agendas:</strong> tap a meeting tab (Team Meeting, or your 1:1s with Jonathan, Pat, Robyn, Marty) and jot points as they come to you. Choose how often it repeats — <strong>Weekly, Fortnightly, Monthly</strong> or no set schedule — and pick the next date; it rolls forward on its own. Add a <strong>link</strong> to any agenda point with the 🔗 button (handy for a doc you'll discuss). Press <strong>Copy agenda</strong> to drop it into an email or Teams, tick items off as you cover them, and use <strong>＋ New</strong> for any other meeting.</li>
-      <li><strong>Post-Meeting Actions:</strong> paste your notes or a Copilot/Teams transcript (or <strong>Upload</strong> a <code>.txt</code>/<code>.vtt</code> file) and click <strong>Find actions</strong>. Add each one to your to-do list or delegate it to a team member in one click. For the smartest read, use <strong>Extract with Claude</strong>.</li>
-    </ul>
-    <h3 style="margin-top:16px;">Getting your Copilot transcript out of Teams</h3>
-    <ul>
-      <li>In Teams: open the meeting → <strong>Recap</strong> → <strong>Transcript</strong> → the <strong>⋯</strong> menu → <strong>Download</strong> and choose <code>.vtt</code> (or just open the transcript, select all the text and copy it).</li>
-      <li>Then paste it into the Post-Meeting Actions box, or use <strong>Upload .txt / .vtt</strong>.</li>
-      <li><em>Coming once IT approves the Microsoft connection:</em> I'll be able to pull the transcript straight from the meeting and write the actions for you — no downloading.</li>
     </ul>
     <h3 style="margin-top:16px;">Keeping your information safe</h3>
     <ul>
@@ -549,7 +514,6 @@
   "use strict";
   var LS = {
     todos: "la_todos_v1",
-    deadlines: "la_deadlines_v1",
     tasks: "la_tasks_v1",
     meetings: "la_meetings_v1",
     mtgSel: "la_mtgsel_v1",
@@ -655,6 +619,7 @@
   var TAG_OPTIONS = ["", "Email", "Calendar", "Team", "Finance", "Admin"];
   var MAX_FILE = 1.5 * 1024 * 1024;   // 1.5 MB per attached file
   var openTodo = null;                 // id of the currently expanded task
+  var draggingTodoId = null;           // id of a to-do being dragged to Team Delegation
   function fmtSize(n) { return n < 1024 ? n + " B" : (n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB"); }
 
   function sortTodos() {
@@ -686,6 +651,7 @@
       if (t.attachments.length) marks += '<span class="mark" title="' + t.attachments.length + ' attachment(s)">📎' + t.attachments.length + '</span>';
       li.innerHTML =
         '<div class="todo">' +
+          '<span class="grip" draggable="true" title="Drag onto Team Delegation to delegate" aria-hidden="true">⠿</span>' +
           '<input type="checkbox" class="check"' + (t.done ? " checked" : "") + ' aria-label="Mark done">' +
           '<span class="txt" role="button" tabindex="0" title="Click to open, edit, add notes or docs">' + esc(t.text) + '</span>' +
           marks + tagHtml + dueHtml +
@@ -695,6 +661,15 @@
         (isOpen ? renderTodoDetail(t) : "");
       li.querySelector(".check").addEventListener("change", function () {
         t.done = this.checked; save(LS.todos, todos); renderTodos(); refreshStats();
+      });
+      var grip = li.querySelector(".grip");
+      grip.addEventListener("dragstart", function (e) {
+        draggingTodoId = t.id; li.classList.add("dragging");
+        if (e.dataTransfer) { e.dataTransfer.setData("text/plain", t.id); e.dataTransfer.effectAllowed = "move"; }
+      });
+      grip.addEventListener("dragend", function () {
+        draggingTodoId = null; li.classList.remove("dragging");
+        var c = $("deleg-card"); if (c) c.classList.remove("drop-active");
       });
       function toggle() { openTodo = isOpen ? null : t.id; renderTodos(); }
       var headline = li.querySelector(".txt");
@@ -737,6 +712,13 @@
         '<div class="att-add"><input type="text" class="ed-link" placeholder="Paste a OneDrive / SharePoint / web link…">' +
           '<button class="btn ghost small ed-link-add">Add link</button>' +
           '<button class="btn ghost small ed-file">Attach file</button></div></div>' +
+      '<div class="field" style="margin-bottom:8px;"><label>Discuss or delegate</label>' +
+        '<div class="send-row"><select class="ed-send-mtg" aria-label="Choose a meeting">' +
+          (meetings.length ? meetings.map(function (m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>'; }).join("")
+                           : '<option value="">No meetings yet</option>') +
+        '</select>' +
+        '<button class="btn ghost small ed-to-agenda">→ Add to agenda</button>' +
+        '<button class="btn ghost small ed-to-deleg">→ Delegate</button></div></div>' +
       '<p class="hint" style="margin:0;">Tip: for bigger documents, keep them in OneDrive/SharePoint and paste the link — it always saves and stays easy to share.</p>' +
       '</div>';
   }
@@ -754,6 +736,17 @@
     d.querySelector(".ed-notes").addEventListener("input", function () {
       t.notes = this.value; save(LS.todos, todos);
     });
+    var agBtn = d.querySelector(".ed-to-agenda");
+    if (agBtn) agBtn.addEventListener("click", function () {
+      var sel = d.querySelector(".ed-send-mtg"), mid = sel ? sel.value : "";
+      var m = meetings.filter(function (x) { return x.id === mid; })[0];
+      if (!m) { toast("Add a meeting first (＋ New in Meeting Agendas)"); return; }
+      var firstLink = (t.attachments || []).filter(function (a) { return a.kind === "link"; })[0];
+      m.items.push({ id: uid(), text: t.text, done: false, link: firstLink ? firstLink.url : "" });
+      save(LS.meetings, meetings); renderMeetings(); toast("Added to " + m.name + " agenda");
+    });
+    var dgBtn = d.querySelector(".ed-to-deleg");
+    if (dgBtn) dgBtn.addEventListener("click", function () { moveTodoToDelegation(t); });
     Array.prototype.forEach.call(d.querySelectorAll(".att-link"), function (el) {
       el.addEventListener("click", function (e) {
         e.preventDefault();
@@ -874,92 +867,6 @@
     save(LS.todos, todos); renderTodos(); refreshStats(); toast("Finished tasks cleared");
   });
 
-  /* ================= DEADLINES ================= */
-  var deadlines = load(LS.deadlines, [
-    { id: uid(), title: "Payroll cut-off — submit timesheets", date: plusDays(2), owner: "You" },
-    { id: uid(), title: "Board pack ready for review", date: plusDays(6), owner: "You" },
-    { id: uid(), title: "Quarterly compliance check", date: plusDays(12), owner: "Ops team" }
-  ]);
-  var openDeadline = null;
-  function renderDeadlines() {
-    deadlines.sort(function (a, b) { return parseDate(a.date) - parseDate(b.date); });
-    var list = $("dl-list"); list.innerHTML = "";
-    if (!deadlines.length) { list.innerHTML = '<li class="empty">No deadlines tracked yet.</li>'; }
-    deadlines.forEach(function (d) {
-      if (!d.attachments) d.attachments = [];
-      var isOpen = openDeadline === d.id;
-      var dt = parseDate(d.date), du = daysUntil(d.date);
-      var pillCls = "ok", pillTxt;
-      if (du < 0) { pillCls = "crit"; pillTxt = Math.abs(du) + "d overdue"; }
-      else if (du === 0) { pillCls = "crit"; pillTxt = "Today"; }
-      else if (du === 1) { pillCls = "warn"; pillTxt = "Tomorrow"; }
-      else if (du <= 7) { pillCls = "warn"; pillTxt = "in " + du + " days"; }
-      else { pillCls = "ok"; pillTxt = "in " + du + " days"; }
-      var marks = "";
-      if (d.notes && d.notes.trim()) marks += ' <span class="mark" title="Has notes">📝</span>';
-      if (d.attachments.length) marks += ' <span class="mark" title="' + d.attachments.length + ' attachment(s)">📎' + d.attachments.length + '</span>';
-      var li = document.createElement("li"); li.className = "deadline-wrap";
-      li.innerHTML =
-        '<div class="deadline">' +
-          '<div class="when"><div class="d num">' + dt.getDate() + '</div><div class="m">' +
-            dt.toLocaleDateString(undefined, { month: "short" }) + '</div></div>' +
-          '<div class="meta"><div class="t" role="button" tabindex="0" title="Click to edit">' + esc(d.title) + marks + '</div>' +
-            (d.owner ? '<div class="who">👤 ' + esc(d.owner) + '</div>' : '') + '</div>' +
-          '<span class="pill ' + pillCls + '">' + pillTxt + '</span>' +
-          '<button class="caret" aria-label="Edit" aria-expanded="' + isOpen + '">' + (isOpen ? "▾" : "▸") + '</button>' +
-          '<button class="del" title="Delete" aria-label="Delete">×</button>' +
-        '</div>' +
-        (isOpen ? renderDlDetail(d) : "");
-      function toggle() { openDeadline = isOpen ? null : d.id; renderDeadlines(); }
-      var tEl = li.querySelector(".meta .t");
-      tEl.addEventListener("click", toggle);
-      tEl.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
-      li.querySelector(".caret").addEventListener("click", toggle);
-      li.querySelector(".del").addEventListener("click", function () {
-        if (openDeadline === d.id) openDeadline = null;
-        deadlines = deadlines.filter(function (x) { return x.id !== d.id; });
-        save(LS.deadlines, deadlines); renderDeadlines(); refreshStats();
-      });
-      if (isOpen) wireDlDetail(li, d);
-      list.appendChild(li);
-    });
-    $("dl-count").textContent = deadlines.length;
-  }
-  function renderDlDetail(d) {
-    return '<div class="dl-detail">' +
-      '<div class="field"><label>What\'s due</label><input type="text" class="ed-title" value="' + esc(d.title) + '"></div>' +
-      '<div class="grid2">' +
-        '<div class="field"><label>Date</label><input type="date" class="ed-date" value="' + esc(d.date || "") + '"></div>' +
-        '<div class="field"><label>Owner</label><input type="text" class="ed-owner" value="' + esc(d.owner || "") + '"></div>' +
-      '</div>' +
-      '<div class="field"><label>Notes</label><textarea class="ed-notes" placeholder="Any detail or context…">' + esc(d.notes || "") + '</textarea></div>' +
-      '<div class="field" style="margin-bottom:8px;"><label>Notes docs</label>' + attBlockHtml(d) + '</div>' +
-      '<p class="hint" style="margin:0;">Tip: for bigger documents, paste a OneDrive/SharePoint link instead of uploading.</p>' +
-      '</div>';
-  }
-  function wireDlDetail(li, d) {
-    var box = li.querySelector(".dl-detail");
-    box.querySelector(".ed-title").addEventListener("input", function () {
-      d.title = this.value; save(LS.deadlines, deadlines);
-      var span = li.querySelector(".meta .t"); if (span && span.firstChild) span.firstChild.nodeValue = this.value;
-    });
-    box.querySelector(".ed-date").addEventListener("change", function () {
-      if (!this.value) return; d.date = this.value; save(LS.deadlines, deadlines); refreshStats();   // re-sorts on collapse
-    });
-    box.querySelector(".ed-owner").addEventListener("change", function () {
-      d.owner = this.value.trim(); save(LS.deadlines, deadlines);
-    });
-    box.querySelector(".ed-notes").addEventListener("input", function () { d.notes = this.value; save(LS.deadlines, deadlines); });
-    wireAtt(box, d, function () { save(LS.deadlines, deadlines); }, renderDeadlines);
-  }
-  $("dl-add").addEventListener("click", function () {
-    var title = $("dl-title").value.trim(), date = $("dl-date").value;
-    if (!title || !date) { toast("Add a title and a date"); return; }
-    deadlines.push({ id: uid(), title: title, date: date, owner: $("dl-owner").value.trim(), notes: "", attachments: [] });
-    $("dl-title").value = ""; $("dl-date").value = ""; $("dl-owner").value = "";
-    save(LS.deadlines, deadlines); renderDeadlines(); refreshStats(); toast("Deadline added");
-  });
-
   /* ================= DELEGATION ================= */
   var STATUS = [
     { v: "todo", label: "To do", cls: "st-todo" },
@@ -1050,6 +957,15 @@
     $("tk-title").value = ""; $("tk-who").value = ""; $("tk-due").value = ""; $("tk-note").value = "";
     save(LS.tasks, tasks); renderTasks(); refreshStats(); toast("Task assigned to " + who);
   });
+  // Move a to-do into Team Delegation (used by the "→ Delegate" button and drag-and-drop).
+  function moveTodoToDelegation(t) {
+    tasks.push({ id: uid(), title: t.text, who: "Unassigned", due: t.due || "", note: t.notes || "", status: "todo", attachments: t.attachments || [] });
+    if (openTodo === t.id) openTodo = null;
+    todos = todos.filter(function (x) { return x.id !== t.id; });
+    save(LS.tasks, tasks); save(LS.todos, todos);
+    renderTodos(); renderTasks(); refreshStats();
+    toast("Moved to Team Delegation — set who it's for");
+  }
 
   /* ================= EMAIL HELPER ================= */
   var templates = {
@@ -1254,91 +1170,9 @@
   }
   function renderMeetings() { renderMtgTabs(); renderMtgPanel(); }
 
-  /* ================= POST-MEETING ACTIONS ================= */
-  function extractActions(text) {
-    var names = ["Jonathan", "Pat", "Robyn", "Marty", "Lauren"];
-    var cues = /\b(action|to-?do|follow[ -]?up|next step|i'?ll|we'?ll|will |need(s)? to|should|must|please|assign|owner|responsible|take care|send|prepare|chase|book|schedul|confirm|draft|review|circulate|organis|organiz|set up|create|update|share|arrange|invoice|email|call)\b/i;
-    var out = [], seen = {};
-    String(text).split(/\r?\n/).forEach(function (line) {
-      var l = line.trim();
-      if (!l || l.length < 6 || l.length > 220) return;
-      if (l.indexOf("-->") !== -1 || /^\d+$/.test(l) || /^WEBVTT/i.test(l)) return;
-      l = l.replace(/^\[?\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\]?\s*/, "");
-      l = l.replace(/^[-•*]\s*/, "");
-      var speaker = (l.match(/^([A-Z][a-zA-Z]+)(?:\s[A-Z][a-zA-Z]+)?:\s*/) || [])[1] || "";
-      l = l.replace(/^([A-Z][a-zA-Z]+(\s[A-Z][a-zA-Z]+)?):\s*/, "");
-      if (l.length < 6 || !cues.test(l)) return;
-      var key = l.toLowerCase().replace(/[^a-z0-9]/g, "");
-      if (seen[key]) return; seen[key] = 1;
-      // Owner: a teammate named in the sentence wins; otherwise the person speaking.
-      var who = "";
-      names.forEach(function (n) { if (new RegExp("\\b" + n + "\\b", "i").test(l)) who = n; });
-      if (!who && speaker) {
-        names.forEach(function (n) { if (n.toLowerCase() === speaker.toLowerCase()) who = n; });
-        if (!who && !/^(the|and|so|but|well|okay|ok|yeah|yes|no)$/i.test(speaker)) who = speaker;
-      }
-      out.push({ text: l, who: who });
-    });
-    return out.slice(0, 20);
-  }
-  function renderActionResults(items) {
-    var box = $("tr-results"); box.innerHTML = "";
-    if (!items.length) {
-      box.innerHTML = '<p class="tr-summary">No clear actions spotted. Try “Extract with Claude” for a smarter read, or add tasks by hand in the panels above.</p>';
-      return;
-    }
-    var head = document.createElement("div");
-    head.innerHTML = '<p class="tr-summary">Found ' + items.length + ' possible action' + (items.length > 1 ? "s" : "") + ' — add the ones you want:</p>';
-    box.appendChild(head);
-    items.forEach(function (a) {
-      var row = document.createElement("div"); row.className = "tr-row";
-      row.innerHTML =
-        '<div class="tr-text">' + esc(a.text) + '</div>' +
-        '<div class="tr-controls">' +
-          '<input type="text" class="tr-who" placeholder="Assign to (optional)" value="' + esc(a.who) + '">' +
-          '<button class="btn ghost small act-todo">＋ My to-do</button>' +
-          '<button class="btn small act-deleg">Delegate</button>' +
-          '<button class="del" title="Dismiss" aria-label="Dismiss">×</button>' +
-        '</div>';
-      row.querySelector(".act-todo").addEventListener("click", function () {
-        todos.push({ id: uid(), text: a.text, done: false, tag: "Team", due: "" });
-        save(LS.todos, todos); renderTodos(); refreshStats(); row.remove(); toast("Added to your to-do list");
-      });
-      row.querySelector(".act-deleg").addEventListener("click", function () {
-        var who = row.querySelector(".tr-who").value.trim() || "Unassigned";
-        tasks.push({ id: uid(), title: a.text, who: who, due: "", note: "From meeting", status: "todo" });
-        save(LS.tasks, tasks); renderTasks(); refreshStats(); row.remove(); toast("Delegated to " + who);
-      });
-      row.querySelector(".del").addEventListener("click", function () { row.remove(); });
-      box.appendChild(row);
-    });
-  }
-  $("tr-find").addEventListener("click", function () {
-    var text = $("tr-input").value.trim();
-    if (!text) { toast("Paste your notes or transcript first"); return; }
-    renderActionResults(extractActions(text));
-  });
-  $("tr-file").addEventListener("click", function () {
-    var inp = document.createElement("input"); inp.type = "file"; inp.accept = ".txt,.vtt,.srt,text/plain";
-    inp.addEventListener("change", function () {
-      var f = inp.files[0]; if (!f) return;
-      var r = new FileReader();
-      r.onload = function () { $("tr-input").value = r.result; renderActionResults(extractActions(r.result)); toast("Transcript loaded"); };
-      r.readAsText(f);
-    });
-    inp.click();
-  });
-  $("tr-claude").addEventListener("click", function () {
-    var text = $("tr-input").value.trim();
-    if (text && navigator.clipboard) navigator.clipboard.writeText(
-      "Please read this meeting transcript and list the action items as: action — owner — due date.\n\n" + text);
-    toast("Transcript copied — paste into Claude");
-    window.open("https://claude.ai/new", "_blank", "noopener");
-  });
-
   /* ================= BACKUP / RESTORE ================= */
   $("backupBtn").addEventListener("click", function () {
-    var data = { todos: todos, deadlines: deadlines, tasks: tasks, meetings: meetings, savedAt: new Date().toISOString() };
+    var data = { todos: todos, tasks: tasks, meetings: meetings, savedAt: new Date().toISOString() };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -1354,10 +1188,9 @@
         try {
           var d = JSON.parse(r.result);
           if (d.todos) { todos = d.todos; save(LS.todos, todos); }
-          if (d.deadlines) { deadlines = d.deadlines; save(LS.deadlines, deadlines); }
           if (d.tasks) { tasks = d.tasks; save(LS.tasks, tasks); }
           if (d.meetings) { meetings = d.meetings; save(LS.meetings, meetings); }
-          renderTodos(); renderDeadlines(); renderTasks(); renderMeetings(); refreshStats(); toast("Backup restored");
+          renderTodos(); renderTasks(); renderMeetings(); refreshStats(); toast("Backup restored");
         } catch (e) { toast("Sorry — that file couldn't be read"); }
       };
       r.readAsText(f);
@@ -1367,9 +1200,10 @@
 
   /* ================= STATS ================= */
   function refreshStats() {
-    $("s-todo").textContent = todos.filter(function (t) { return !t.done && t.due && daysUntil(t.due) <= 0; }).length;
-    $("s-over").textContent = deadlines.filter(function (d) { return daysUntil(d.date) < 0; }).length;
-    $("s-week").textContent = deadlines.filter(function (d) { var u = daysUntil(d.date); return u >= 0 && u <= 7; }).length;
+    var open = todos.filter(function (t) { return !t.done; });
+    $("s-todo").textContent = open.filter(function (t) { return t.due && daysUntil(t.due) === 0; }).length;
+    $("s-over").textContent = open.filter(function (t) { return t.due && daysUntil(t.due) < 0; }).length;
+    $("s-week").textContent = open.filter(function (t) { var u = t.due ? daysUntil(t.due) : null; return u !== null && u >= 0 && u <= 7; }).length;
     $("s-deleg").textContent = tasks.filter(function (t) { return t.status !== "done"; }).length;
   }
 
@@ -1381,7 +1215,7 @@
       el.innerHTML = "✓ Auto-saving on this device — your lists will be here when you come back. " +
         "Tip: click <strong>Export</strong> now and then for a safety backup.";
       // Write the starter data straight away so it persists even without any clicks.
-      save(LS.todos, todos); save(LS.deadlines, deadlines); save(LS.tasks, tasks); save(LS.meetings, meetings);
+      save(LS.todos, todos); save(LS.tasks, tasks); save(LS.meetings, meetings);
     } else {
       el.className = "storage-status warn";
       el.innerHTML = "⚠️ This view can’t save automatically. Click <strong>Export</strong> to save your info to a file, " +
@@ -1389,6 +1223,24 @@
         "(see “Make saving automatic” at the bottom of this page).";
     }
   })();
-  renderTodos(); renderDeadlines(); renderTasks(); renderMeetings(); refreshStats();
+  // Drag-and-drop: drop a to-do onto the Team Delegation card to delegate it.
+  (function setupDnD() {
+    var card = $("deleg-card"); if (!card) return;
+    card.addEventListener("dragover", function (e) {
+      if (!draggingTodoId) return;
+      e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      card.classList.add("drop-active");
+    });
+    card.addEventListener("dragleave", function (e) {
+      if (!card.contains(e.relatedTarget)) card.classList.remove("drop-active");
+    });
+    card.addEventListener("drop", function (e) {
+      e.preventDefault(); card.classList.remove("drop-active");
+      var id = (e.dataTransfer && e.dataTransfer.getData("text/plain")) || draggingTodoId;
+      var t = todos.filter(function (x) { return x.id === id; })[0];
+      if (t) moveTodoToDelegation(t);
+    });
+  })();
+  renderTodos(); renderTasks(); renderMeetings(); refreshStats();
 })();
 </script>
